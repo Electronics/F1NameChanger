@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30309.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "F1-2020 Names Changer", "F1-2020 Names Changer\F1-2020 Names Changer.csproj", "{56FDDC77-2EB5-416A-B493-46851F94FE32}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "F1-2020 Names Changer", "F1-2020 Names Changer\F1-2020 Names Changer.csproj", "{784F479E-AD67-4C69-8177-6C07BC2C6E71}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{56FDDC77-2EB5-416A-B493-46851F94FE32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{56FDDC77-2EB5-416A-B493-46851F94FE32}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{56FDDC77-2EB5-416A-B493-46851F94FE32}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{56FDDC77-2EB5-416A-B493-46851F94FE32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{784F479E-AD67-4C69-8177-6C07BC2C6E71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{784F479E-AD67-4C69-8177-6C07BC2C6E71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{784F479E-AD67-4C69-8177-6C07BC2C6E71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{784F479E-AD67-4C69-8177-6C07BC2C6E71}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {117CF931-8EE7-412B-A7B5-F04043A2A62C}
+		SolutionGuid = {C203CAA1-E67E-4C40-8569-935D80712260}
 	EndGlobalSection
 EndGlobal

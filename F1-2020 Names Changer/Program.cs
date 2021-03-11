@@ -450,4 +450,10 @@ namespace F1_2020_Names_Changer {
             Environment.Exit(1);
         }
     }
+    //the extension class must be declared as static
+    public static class StringExtension { // why is .NETcore different to .NETframework...
+        public static string[] Split(this string str, string splitter) {
+            return str.Split(new[] { splitter }, StringSplitOptions.None);
+        }
+    }
 }
