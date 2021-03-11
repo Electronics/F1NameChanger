@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>F1_2020_Names_Changer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="beforeIChangeallToBytes.cs" />
+    <Compile Remove="Program - StringsButWithIssue.cs" />
+    <Compile Remove="whenIstartedChangingitToBytes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+</Project>
