@@ -406,7 +406,7 @@ namespace F1_2020_Names_Changer {
         static void loadLookupTables() {
             // load in name lookup table
             try {
-                string jsonStr = File.ReadAllText(@"C:\Users\Laurie\Desktop\F1RevEng\names.json");
+                string jsonStr = File.ReadAllText(@"names.json");
                 dynamic json = JsonConvert.DeserializeObject(jsonStr);
 
                 foreach (dynamic person in json) {
@@ -423,7 +423,7 @@ namespace F1_2020_Names_Changer {
             } catch (FileNotFoundException) { }
 
             try {
-                string txtStr = File.ReadAllText(@"C:\Users\Laurie\Desktop\F1RevEng\names.txt");
+                string txtStr = File.ReadAllText(@"names.txt");
                 using (var reader = new StringReader(txtStr)) {
                     for (string line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
 
