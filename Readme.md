@@ -2,20 +2,24 @@ This is a memory editing tool to allow for the names in the F1 2020 game to be c
 
 I wrote this rather than using cheat engine, as I felt the scripting tools availble in cheat engine was rather limited.
 
+** NB ** I'm aware at the moment browsers and windows defender will throw a hissy-fit about the program containing trojan "Wacatac.B!ml" or "AgentTesla!ml". I can confirm this executable doesn't contain this and I'm working on fixing these false positives. See https://www.virustotal.com/gui/file/c8827a0885bc503702486cdb6cf170dd47bc04046fe0a8a1efbd4ff696cac324/detection for a full report.
+
 # Running
 
-Simply download the executable from the releases section, and supply a `names.json` or `names.txt` file as a lookup table. Example files are given with all the existing names pre-filled. The text file can simply be opened as a csv file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`. The JSON file is a bit different as `"original NAME": {"name": "new NAME", "tag": "newDriverTag"},`.
+Simply download the executable from the releases section, and supply a `names.json` or `names.txt` file in the same directory as a lookup table. Example files are given with all the existing names pre-filled. The text file can simply be opened as a csv file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`. The JSON file is a bit different as `"original NAME": {"name": "new NAME", "tag": "newDriverTag"},`.
 For example `Carlos SAINZ, Example DRIVER, DRV` or `"Carlos SAINZ": {"name": "Example DRIVER", "tag": "DRV"},`.
 All driver names should be in the format mixed-case first name, upper-case last-name.
 Run the executable before or after the game has started and it should do its magic! BEWARE: There is no undo button! If you want to reset your driver names you will need to restart the game.
 
 # Memory Locations
-	* **Menu Region 1**: Where the names for leaderboards are kept, they are stored in their full name format i.e. `Carlos SAINZ`. Usually in memory in the format `{o:mixed}Carlos{/o} {o:upper}SAINZ{/o}` and limited to 39 bytes in total. The `{o:mixed}` bits can be ommitted without any penalty and I use this to account for longer names. The struct that the UTF-8 encoded strings sit in is in 64-byte chunks, but can have extra stuff in (I think relating to player models?)
-	* **Menu Region 2**: A continuation from Menu Region 1 but with a byte limit of 44 this time, for some reason the game segments these 2 and also intersperces some team name bits at the beginning and end causing some fragmentation
-	* **Character Selection Region**: Where the names are stored for the character selection screen on a new game. This region of memory is sadly not very continuous and contains some duplication for unknown reasons and fragmentation of other data again. Names usually aligned every 48 byte interval. For this region I search for names rather than checking on the byte alignment due to the duplications
-	* **In Game Region**: This region is a large regular table with a new line of data every 32 bytes, and is 7968 bytes long. The lines *usually* alternate between firstname, lastname, driver tag (3 letters); but sometimes if a driver name is too long is ommitted and skipped. All driver names and lines of text must be 9 bytes or less.
+
+- **Menu Region 1**: Where the names for leaderboards are kept, they are stored in their full name format i.e. `Carlos SAINZ`. Usually in memory in the format `{o:mixed}Carlos{/o} {o:upper}SAINZ{/o}` and limited to 39 bytes in total. The `{o:mixed}` bits can be ommitted without any penalty and I use this to account for longer names. The struct that the UTF-8 encoded strings sit in is in 64-byte chunks, but can have extra stuff in (I think relating to player models?)
+- **Menu Region 2**: A continuation from Menu Region 1 but with a byte limit of 44 this time, for some reason the game segments these 2 and also intersperces some team name bits at the beginning and end causing some fragmentation
+- **Character Selection Region**: Where the names are stored for the character selection screen on a new game. This region of memory is sadly not very continuous and contains some duplication for unknown reasons and fragmentation of other data again. Names usually aligned every 48 byte interval. For this region I search for names rather than checking on the byte alignment due to the duplications
+- **In Game Region**: This region is a large regular table with a new line of data every 32 bytes, and is 7968 bytes long. The lines *usually* alternate between firstname, lastname, driver tag (3 letters); but sometimes if a driver name is too long is ommitted and skipped. All driver names and lines of text must be 9 bytes or less.
 
 # Observations / Known Issues
-	* Due to how the ingame-names are stored, depending on the original length of the name (lastname usually as it shows up in the sidebar), the new name can be truncated by the game to ~8 characters
-	* Lastnames of 3 characters might cause issues being incorrectly identified as driver tags, I don't think this is an issue unless this tool is run multiple times in sucession, or in future the game adds additional drivers with these properties
-	* Lookups for 3 letter driver tags need to be completed
+
+- Due to how the ingame-names are stored, depending on the original length of the name (lastname usually as it shows up in the sidebar), the new name can be truncated by the game to ~8 characters
+- Lastnames of 3 characters might cause issues being incorrectly identified as driver tags, I don't think this is an issue unless this tool is run multiple times in sucession, or in future the game adds additional drivers with these properties
+- Lookups for 3 letter driver tags need to be completed
