@@ -2,6 +2,8 @@ This is a memory editing tool to allow for the names in the F1 2020 game to be c
 
 I wrote this rather than using cheat engine, as I felt the scripting tools availble in cheat engine was rather limited.
 
+** NB ** I'm aware at the moment browsers and windows defender will throw a hissy-fit about the program containing trojan "Wacatac.B!ml" or "AgentTesla!ml". I can confirm this executable doesn't contain this and I'm working on fixing these false positives. See https://www.virustotal.com/gui/file/c8827a0885bc503702486cdb6cf170dd47bc04046fe0a8a1efbd4ff696cac324/detection for a full report.
+
 # Running
 
 Simply download the executable from the releases section, and supply a `names.json` or `names.txt` file in the same directory as a lookup table. Example files are given with all the existing names pre-filled. The text file can simply be opened as a csv file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`. The JSON file is a bit different as `"original NAME": {"name": "new NAME", "tag": "newDriverTag"},`.
