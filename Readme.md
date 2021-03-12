@@ -4,7 +4,7 @@ I wrote this rather than using cheat engine, as I felt the scripting tools avail
 
 # Running
 
-Simply download the executable from the releases section, and supply a `names.json` or `names.txt` file as a lookup table. Example files are given with all the existing names pre-filled. The text file can simply be opened as a csv file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`. The JSON file is a bit different as `"original NAME": {"name": "new NAME", "tag": "newDriverTag"},`.
+Simply download the executable from the releases section, and supply a `names.json` or `names.txt` file in the same directory as a lookup table. Example files are given with all the existing names pre-filled. The text file can simply be opened as a csv file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`. The JSON file is a bit different as `"original NAME": {"name": "new NAME", "tag": "newDriverTag"},`.
 For example `Carlos SAINZ, Example DRIVER, DRV` or `"Carlos SAINZ": {"name": "Example DRIVER", "tag": "DRV"},`.
 All driver names should be in the format mixed-case first name, upper-case last-name.
 Run the executable before or after the game has started and it should do its magic! BEWARE: There is no undo button! If you want to reset your driver names you will need to restart the game.
