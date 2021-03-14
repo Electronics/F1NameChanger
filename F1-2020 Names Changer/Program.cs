@@ -343,24 +343,29 @@ namespace F1_2020_Names_Changer {
                 return newName;
 			}
             // try and find a match?
-            var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Contains(lastname.ToLower())).ToList();
-            if (possibleKeys.Count > 0) {
-                if (possibleKeys.Count == 1) {
-                    newName = nameLookup[possibleKeys.First()];
-                    cwc($"\tLOOKUP: Found probabilistic match based on last name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}", ConsoleColor.Yellow);
-                    return newName;
-				}
-                // could at this point try checking other things, but eh, let's put the onus on the user
+            if (!String.IsNullOrWhiteSpace(lastname)) {
+                var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Contains(lastname.ToLower())).ToList();
+                if (possibleKeys.Count > 0) {
+                    if (possibleKeys.Count == 1) {
+                        newName = nameLookup[possibleKeys.First()];
+                        cwc($"\tLOOKUP: Found probabilistic match based on last name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}", ConsoleColor.Yellow);
+                        return newName;
+                    }
+                    // could at this point try checking other things, but eh, let's put the onus on the user
+                }
             }
             // try firstnames?
-            possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Contains(firstname.ToLower())).ToList();
-            if (possibleKeys.Count > 0) {
-                if (possibleKeys.Count == 1) {
-                    newName = nameLookup[possibleKeys.First()];
-                    cwc($"\tLOOKUP: Found probabilistic match based on first name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}", ConsoleColor.Yellow);
-                    return newName;
+
+            if (!String.IsNullOrWhiteSpace(firstname)) {
+                var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Contains(firstname.ToLower())).ToList();
+                if (possibleKeys.Count > 0) {
+                    if (possibleKeys.Count == 1) {
+                        newName = nameLookup[possibleKeys.First()];
+                        cwc($"\tLOOKUP: Found probabilistic match based on first name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}", ConsoleColor.Yellow);
+                        return newName;
+                    }
+                    // could at this point try checking other things, but eh, let's put the onus on the user
                 }
-                // could at this point try checking other things, but eh, let's put the onus on the user
             }
             cwc($"\tLOOKUP: Failed to find a lookup for {firstname} {lastname}, skipping", ConsoleColor.Yellow);
             return null;
@@ -405,6 +410,7 @@ namespace F1_2020_Names_Changer {
 
         static void loadLookupTables() {
             // load in name lookup table
+            //TODO: fix-formatting of names to Mixed, Upper
             try {
                 string jsonStr = File.ReadAllText(@"names.json");
                 dynamic json = JsonConvert.DeserializeObject(jsonStr);
