@@ -67,6 +67,7 @@ namespace F1_2020_Names_Changer {
             }
             Process process = Process.GetProcessesByName("F1_2020_dx12")[0]; // Get the F1 process
             IntPtr processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, process.Id);
+            cwc("F1 Process detected", ConsoleColor.Green);
 
 
             // First off, let's find the start of the menu section
