@@ -218,7 +218,6 @@ namespace F1_2020_Names_Changer {
 
                 // we can now lookup the name in a lookup table and replace it
                 var rName = lookupName(firstName, lastName);
-                rName = "Abcdefgh JKLMNOPQR";
 
                 if (!String.IsNullOrEmpty(rName)) {
                     String newName = generateMenuName(rName.Split(" ")[0], rName.Split(" ")[1], nameSize); // add the new menu item
