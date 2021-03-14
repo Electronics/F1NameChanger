@@ -18,7 +18,7 @@ Run the executable before or after the game has started and it should do its mag
 
 # Observations / Known Issues
 
-- Due to how the ingame-names are stored, depending on the original length of the name (lastname usually as it shows up in the sidebar), the new name can be truncated by the game to the original name's length. As far as I can tell, this can't be easily fixed in any way (see [Reverse Engineering](Reverse Engineering/Reverse Engineering.md)) for more details on this
+- Due to how the ingame-names are stored, depending on the original length of the name (lastname usually as it shows up in the sidebar), the new name can be truncated by the game to the original name's length. As far as I can tell, this can't be easily fixed in any way (see [Reverse Engineering](Reverse%20Engineering/Reverse%20Engineering.md)) for more details on this
 - Lastnames of 3 characters might cause issues being incorrectly identified as driver tags, I don't think this is an issue unless this tool is run multiple times in sucession, or in future the game adds additional drivers with these properties
 - Lookups for 3 letter driver tags need to be completed
 - There is no Undo button!
