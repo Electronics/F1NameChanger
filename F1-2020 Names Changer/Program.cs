@@ -50,7 +50,7 @@ namespace F1_2020_Names_Changer {
         const Int64 INGAME_OFFSET_START = 0x2b08a7000;
 
         static readonly byte[] MENU_SEARCH_STR = Encoding.UTF8.GetBytes("{o:mixed}"); // GetEncoding(437)?! this is an encoding that doesn't mangle weird non-UTF8-characters like 255 and 128!
-        static readonly byte[] CHARSELECTION_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos SAINZ"); // he's always first, well, in some ways
+        static readonly byte[] CHARSELECTION_SEARCH_STR = Encoding.UTF8.GetBytes("Mr HEINZ"); // he's always first, well, in some ways
         static readonly byte[] INGAME_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos");
 
         static void Main(string[] args) {
@@ -256,6 +256,48 @@ namespace F1_2020_Names_Changer {
                         }
                     } else {
                         cwc($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value})", ConsoleColor.Red);
+                    }
+                }
+
+                // now search for just the lastnames!
+                ptr = 0;
+                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[1]))) >= 0) {
+                    cwc($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[1]}", ConsoleColor.Green);
+
+                    // make sure we can fit it
+                    byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value.Split(" ")[1]);
+                    if (newDriver.Length <= 24) {
+                        Array.Clear(buffer, ptr, 24);
+                        Buffer.BlockCopy(newDriver, 0, buffer, ptr, newDriver.Length);
+                        // I think it's ok to overwrite all instances of the name, but there is typically 3 for each driver:
+                        // the first padded as mentioned, is the one used in rendering
+                        // the other two I'm not sure about though
+                        if (ptr + driver.Value.Length > lastNamePtr) {
+                            lastNamePtr = ptr + 24;
+                        }
+                    } else {
+                        cwc($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[1]})", ConsoleColor.Red);
+                    }
+                }
+
+                // now search for just the firstnames!
+                ptr = 0;
+                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[0]))) >= 0) {
+                    cwc($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[0]}", ConsoleColor.Green);
+
+                    // make sure we can fit it
+                    byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value.Split(" ")[0]);
+                    if (newDriver.Length <= 24) {
+                        Array.Clear(buffer, ptr, 24);
+                        Buffer.BlockCopy(newDriver, 0, buffer, ptr, newDriver.Length);
+                        // I think it's ok to overwrite all instances of the name, but there is typically 3 for each driver:
+                        // the first padded as mentioned, is the one used in rendering
+                        // the other two I'm not sure about though
+                        if (ptr + driver.Value.Length > lastNamePtr) {
+                            lastNamePtr = ptr + 24;
+                        }
+                    } else {
+                        cwc($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[0]})", ConsoleColor.Red);
                     }
                 }
             }
