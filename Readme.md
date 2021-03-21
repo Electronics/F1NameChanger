@@ -11,7 +11,9 @@ Run the executable before or after the game has started and it should do its mag
 
 ## Config
 
-### `.txt`
+For team names, if you wish to have some lower-case sections of the name in the longer name, surround the particular bit with `{o:lower}` and `{/o}`. The short names will be displayed as-is with the upper/lower case as typed. Team names are (for the most part) not limited in length.
+
+##### `.txt`
 
 The text files are the simplest way of configuring this tool as they are basically a csv file.
 
@@ -19,11 +21,11 @@ The text file can simply be opened as a csv file and consists of one driver per 
 The teams file similarly, is one team per line: `old team name, new team name, shortened in-game name`. 
 See the example files for a list of old driver/team names.
 
+##### `.json`
+
 The JSON file is a bit different as `"original NAME": {"name": "new NAME", "tag": "newDriverTag"},`.
 For example `Carlos SAINZ, Example DRIVER, DRV` or `"Carlos SAINZ": {"name": "Example DRIVER", "tag": "DRV"},`.
 All driver names should be in the format mixed-case first name ("Carlos"), upper-case last-name ("SAINZ") but the application *should* fix any issues with this.
-
-For team names, if you wish to have some lower-case sections of the name in the longer name, surround the particular bit with `{o:lower}` and `{/o}`. The short names will be displayed as-is with the upper/lower case as typed. Team names are (for the most part) not limited in length.
 
 # Memory Locations
 
