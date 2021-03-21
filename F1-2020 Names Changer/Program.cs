@@ -13,6 +13,8 @@ namespace F1_2020_Names_Changer {
 
         static Dictionary<string, string> nameLookup = new Dictionary<string, string>();
         static Dictionary<string, string> nameLookup_short = new Dictionary<string, string>();
+        static Dictionary<string, string> teamLookup = new Dictionary<string, string>();
+        static Dictionary<string, string> teamLookup_short = new Dictionary<string, string>();
 
         static void cwc(String s, ConsoleColor fg, ConsoleColor bg = ConsoleColor.Black) {
             ConsoleColor bg_ = Console.BackgroundColor;
@@ -48,6 +50,29 @@ namespace F1_2020_Names_Changer {
         const Int64 MENU2_OFFSET_START = 0x2b0f32000;
         const Int64 CHARSELECTION_OFFSET_START = 0x2b0b07920;
         const Int64 INGAME_OFFSET_START = 0x2b08a7000;
+
+        // teams offset separately stated as there doesn't seem to be much order to how they're organised. Plus the memory locations are static
+        const Int64 TEAMS_OFFSET_MENU_RACING_POINT = 0x193295b10;
+        const Int64 TEAMS_OFFSET_MENU_MERCEDES = 0x1932ffe76;
+        const Int64 TEAMS_OFFSET_MENU_FERRARI = 0x1932fff28;
+        const Int64 TEAMS_OFFSET_MENU_RED_BULL = 0x1933000f5;
+        const Int64 TEAMS_OFFSET_MENU_ALPHA_TAURI = 0x19330025e;
+        const Int64 TEAMS_OFFSET_MENU_RENAULT = 0x193300352;
+        const Int64 TEAMS_OFFSET_MENU_ALFA_ROMEO = 0x1933004A7;
+        const Int64 TEAMS_OFFSET_MENU_WILLIAMS = 0x19330058b;
+        const Int64 TEAMS_OFFSET_MENU_HAAS = 0x193300760;
+        const Int64 TEAMS_OFFSET_MENU_MCLAREN = 0x19330065f;
+
+        const Int64 TEAMS_OFFSET_GAME_RACING_POINT = 0x193296097;
+        const Int64 TEAMS_OFFSET_GAME_MERCEDES = 0x193300575;
+        const Int64 TEAMS_OFFSET_GAME_FERRARI = 0x193300139;
+        const Int64 TEAMS_OFFSET_GAME_RED_BULL = 0x1932ffdc3;
+        const Int64 TEAMS_OFFSET_GAME_ALPHA_TAURI = 0x193300038;
+        const Int64 TEAMS_OFFSET_GAME_RENAULT = 0x1933001ac;
+        const Int64 TEAMS_OFFSET_GAME_ALFA_ROMEO = 0x1933002c7;
+        const Int64 TEAMS_OFFSET_GAME_WILLIAMS = 0x1932ffdf8; //this one doesn't exist?
+        const Int64 TEAMS_OFFSET_GAME_HAAS = 0x1932ffe4c;
+        const Int64 TEAMS_OFFSET_GAME_MCLAREN = 0x1933005b6;
 
         static readonly byte[] MENU_SEARCH_STR = Encoding.UTF8.GetBytes("{o:mixed}"); // GetEncoding(437)?! this is an encoding that doesn't mangle weird non-UTF8-characters like 255 and 128!
         static readonly byte[] CHARSELECTION_SEARCH_STR = Encoding.UTF8.GetBytes("Mr HEINZ"); // he's always first, well, in some ways
@@ -174,7 +199,14 @@ namespace F1_2020_Names_Changer {
                 cwc($"Written {bytesWritten} bytes to RAM at {INGAME_OFFSET_START + menuOffsetAdditional:X}(Game region)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
             }
 
+            // --------------------- Now finally teams ----------------------------------------
+            if (teamLookup.Count > 0) {
+                writeTeamNames(processHandle);
+			} else {
+                cwc("Skipping team names as missing team lookups", ConsoleColor.Yellow);
+			}
 
+            cwc("Done! Press any key to close", ConsoleColor.Green);
 
             Console.ReadLine();
         }
@@ -368,6 +400,45 @@ namespace F1_2020_Names_Changer {
             return buffer.Take(regionSize).ToArray();
 		}
 
+        static void writeTeamNames(IntPtr processHandle) {
+            // from what I can tell, it doesn't matter how long the string is as long as it's null terminated ( we will overwrite some other stuff somewhere in the menu system, but whatever)
+            // also, these are spread out a lot in memory, so better to 'punch' in and out directly, rather than reading and writing like 437k of memory
+            void tryCopyName(string oldName, long ptr, Dictionary<string,string> dict) {
+                if(dict.ContainsKey(oldName)) {
+                    byte[] newName_bytes = Encoding.UTF8.GetBytes(dict[oldName]+"\0");
+                    IntPtr bytesWritten;
+                    WriteProcessMemory((IntPtr)processHandle, (IntPtr)ptr, newName_bytes, newName_bytes.Length, out bytesWritten);
+                    cwc($"\t{oldName}->{dict[oldName]} written successfully", ConsoleColor.Green);
+                } else {
+                    cwc($"\t{oldName} not found in teams lookup, skipping", ConsoleColor.Yellow);
+				}
+			}
+
+            cwc("Writing team names...", ConsoleColor.Cyan);
+
+            tryCopyName("Racing Point", TEAMS_OFFSET_GAME_RACING_POINT, teamLookup_short);
+            tryCopyName("Racing Point", TEAMS_OFFSET_MENU_RACING_POINT, teamLookup);
+            tryCopyName("Mercedes", TEAMS_OFFSET_GAME_MERCEDES, teamLookup_short);
+            tryCopyName("Mercedes", TEAMS_OFFSET_MENU_MERCEDES, teamLookup);
+            tryCopyName("Ferrari", TEAMS_OFFSET_GAME_FERRARI, teamLookup_short);
+            tryCopyName("Ferrari", TEAMS_OFFSET_MENU_FERRARI, teamLookup);
+            tryCopyName("Red Bull", TEAMS_OFFSET_GAME_RED_BULL, teamLookup_short);
+            tryCopyName("Red Bull", TEAMS_OFFSET_MENU_RED_BULL, teamLookup);
+            tryCopyName("AlphaTauri", TEAMS_OFFSET_GAME_ALPHA_TAURI, teamLookup_short);
+            tryCopyName("AlphaTauri", TEAMS_OFFSET_MENU_ALPHA_TAURI, teamLookup);
+            tryCopyName("Renault", TEAMS_OFFSET_GAME_RENAULT, teamLookup_short);
+            tryCopyName("Renault", TEAMS_OFFSET_MENU_RENAULT, teamLookup);
+            tryCopyName("Alfa Romeo", TEAMS_OFFSET_GAME_ALFA_ROMEO, teamLookup_short);
+            tryCopyName("Alfa Romeo", TEAMS_OFFSET_MENU_ALFA_ROMEO, teamLookup);
+            tryCopyName("Williams", TEAMS_OFFSET_GAME_WILLIAMS, teamLookup_short);
+            tryCopyName("Williams", TEAMS_OFFSET_MENU_WILLIAMS, teamLookup);
+            tryCopyName("Haas", TEAMS_OFFSET_GAME_HAAS, teamLookup_short);
+            tryCopyName("Haas", TEAMS_OFFSET_MENU_HAAS, teamLookup);
+            tryCopyName("McLaren", TEAMS_OFFSET_GAME_MCLAREN, teamLookup_short);
+            tryCopyName("McLaren", TEAMS_OFFSET_MENU_MCLAREN, teamLookup);
+        }
+
+
         static bool IsAllUpper(string input) {
             for (int i = 0; i < input.Length; i++) {
                 if (!Char.IsUpper(input[i]))
@@ -453,6 +524,7 @@ namespace F1_2020_Names_Changer {
         static void loadLookupTables() {
             // load in name lookup table
             //TODO: fix-formatting of names to Mixed, Upper
+            bool nameLookupSuccess = false;
             try {
                 string jsonStr = File.ReadAllText(@"names.json");
                 dynamic json = JsonConvert.DeserializeObject(jsonStr);
@@ -466,8 +538,8 @@ namespace F1_2020_Names_Changer {
                         nameLookup_short.Add((string)person.Name, (string)person.Value.tag);
                     }
                 }
-                cwc("Loaded in json lookup file", ConsoleColor.Green);
-                return;
+                cwc("Loaded in json name lookup file", ConsoleColor.Green);
+                nameLookupSuccess = true;
             } catch (FileNotFoundException) { }
 
             try {
@@ -489,13 +561,58 @@ namespace F1_2020_Names_Changer {
                         }
                     }
                 }
-                cwc("Loaded in txt lookup file", ConsoleColor.Green);
-                return;
+                cwc("Loaded in txt name lookup file", ConsoleColor.Green);
+                nameLookupSuccess = true;
             } catch (FileNotFoundException) { }
 
-            cwc("Name lookup file (json or txt/csv) not found!", ConsoleColor.Red);
-            Console.ReadLine();
-            Environment.Exit(1);
+            if (!nameLookupSuccess) {
+                cwc("Name lookup file (json or txt/csv) not found!", ConsoleColor.Red);
+                Console.ReadLine();
+                Environment.Exit(1);
+            }
+
+            bool teamLookupSuccess = false;
+            try {
+                string jsonStr = File.ReadAllText(@"teams.json");
+                dynamic json = JsonConvert.DeserializeObject(jsonStr);
+
+                foreach (dynamic team in json) {
+                    if (String.IsNullOrWhiteSpace((string)team.Name)) continue;
+                    if (String.IsNullOrWhiteSpace((string)team.Value.name)) continue;
+                    teamLookup.Add((string)team.Name, (string)team.Value.name);
+                    if (!String.IsNullOrWhiteSpace((string)team.Value.ingame)) {
+                        teamLookup_short.Add((string)team.Name, (string)team.Value.ingame);
+                    }
+                }
+                cwc("Loaded in json team lookup file", ConsoleColor.Green);
+                teamLookupSuccess = true;
+            } catch (FileNotFoundException) { }
+
+            try {
+                string txtStr = File.ReadAllText(@"teams.txt");
+                using (var reader = new StringReader(txtStr)) {
+                    for (string line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+
+                        var split = line.Split(",");
+                        if (split.Length < 2) continue;
+                        String oldName = split[0].Trim();
+                        String newName = split[1].Trim();
+                        if (String.IsNullOrWhiteSpace(oldName)) continue;
+                        if (String.IsNullOrWhiteSpace(newName)) continue;
+                        teamLookup.Add(oldName, newName);
+                        if (split.Length > 2) {
+                            String newTag = split[2].Trim();
+                            teamLookup_short.Add(oldName, newTag);
+                        }
+                    }
+                }
+                cwc("Loaded in txt team lookup file", ConsoleColor.Green);
+                teamLookupSuccess = true;
+            } catch (FileNotFoundException) { }
+
+            if (!teamLookupSuccess) {
+                cwc("Team lookup file (json or txt/csv) not found! Skipping team changing for now.", ConsoleColor.Red);
+			}
         }
     }
     //the extension class must be declared as static
