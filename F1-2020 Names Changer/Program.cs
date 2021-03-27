@@ -46,36 +46,36 @@ namespace F1_2020_Names_Changer {
         const int PROCESS_ALL_ACCESS = 0x1F0FFF;
 
         // these are addresses at which this program will start to search for the below search strings to identify the where the actual start of the region is
-        const Int64 MENU_OFFSET_START = 0x2b0cc2500; // 0x2b0cc2542
-        const Int64 MENU2_OFFSET_START = 0x2b0f32000;
-        const Int64 CHARSELECTION_OFFSET_START = 0x2b0b07920;
-        const Int64 INGAME_OFFSET_START = 0x2b08a7000;
+        const Int64 MENU_OFFSET_START = 0x2b1d12715;
+        const Int64 MENU2_OFFSET_START = 0x2b1f83800;
+        const Int64 CHARSELECTION_OFFSET_START = 0x2b1b5760f;
+        const Int64 INGAME_OFFSET_START = 0x2b18f7078;
 
         // teams offset separately stated as there doesn't seem to be much order to how they're organised. Plus the memory locations are static
-        const Int64 TEAMS_OFFSET_MENU_RACING_POINT = 0x193295b10;
-        const Int64 TEAMS_OFFSET_MENU_MERCEDES = 0x1932ffe76;
-        const Int64 TEAMS_OFFSET_MENU_FERRARI = 0x1932fff28;
-        const Int64 TEAMS_OFFSET_MENU_RED_BULL = 0x1933000f5;
-        const Int64 TEAMS_OFFSET_MENU_ALPHA_TAURI = 0x19330025e;
-        const Int64 TEAMS_OFFSET_MENU_RENAULT = 0x193300352;
-        const Int64 TEAMS_OFFSET_MENU_ALFA_ROMEO = 0x1933004A7;
-        const Int64 TEAMS_OFFSET_MENU_WILLIAMS = 0x19330058b;
-        const Int64 TEAMS_OFFSET_MENU_HAAS = 0x193300760;
-        const Int64 TEAMS_OFFSET_MENU_MCLAREN = 0x19330065f;
+        const Int64 TEAMS_OFFSET_MENU_RACING_POINT = 0x1942e67cd;
+        const Int64 TEAMS_OFFSET_MENU_MERCEDES = 0x194350b33;
+        const Int64 TEAMS_OFFSET_MENU_FERRARI = 0x194350be5;
+        const Int64 TEAMS_OFFSET_MENU_RED_BULL = 0x194350db2;
+        const Int64 TEAMS_OFFSET_MENU_ALPHA_TAURI = 0x194350f1b;
+        const Int64 TEAMS_OFFSET_MENU_RENAULT = 0x19435100f;
+        const Int64 TEAMS_OFFSET_MENU_ALFA_ROMEO = 0x194351164;
+        const Int64 TEAMS_OFFSET_MENU_WILLIAMS = 0x194351248;
+        const Int64 TEAMS_OFFSET_MENU_HAAS = 0x19435141d;
+        const Int64 TEAMS_OFFSET_MENU_MCLAREN = 0x19435131c;
 
-        const Int64 TEAMS_OFFSET_GAME_RACING_POINT = 0x193296097;
-        const Int64 TEAMS_OFFSET_GAME_MERCEDES = 0x193300575;
-        const Int64 TEAMS_OFFSET_GAME_FERRARI = 0x193300139;
-        const Int64 TEAMS_OFFSET_GAME_RED_BULL = 0x1932ffdc3;
-        const Int64 TEAMS_OFFSET_GAME_ALPHA_TAURI = 0x193300038;
-        const Int64 TEAMS_OFFSET_GAME_RENAULT = 0x1933001ac;
-        const Int64 TEAMS_OFFSET_GAME_ALFA_ROMEO = 0x1933002c7;
-        const Int64 TEAMS_OFFSET_GAME_WILLIAMS = 0x1932ffdf8; //this one doesn't exist?
-        const Int64 TEAMS_OFFSET_GAME_HAAS = 0x1932ffe4c;
-        const Int64 TEAMS_OFFSET_GAME_MCLAREN = 0x1933005b6;
+        const Int64 TEAMS_OFFSET_GAME_RACING_POINT = 0x1942e6d54;
+        const Int64 TEAMS_OFFSET_GAME_MERCEDES = 0x194351232;
+        const Int64 TEAMS_OFFSET_GAME_FERRARI = 0x194350df6;
+        const Int64 TEAMS_OFFSET_GAME_RED_BULL = 0x194350a80;
+        const Int64 TEAMS_OFFSET_GAME_ALPHA_TAURI = 0x194350cf5;
+        const Int64 TEAMS_OFFSET_GAME_RENAULT = 0x194350e69;
+        const Int64 TEAMS_OFFSET_GAME_ALFA_ROMEO = 0x194350f84;
+        const Int64 TEAMS_OFFSET_GAME_WILLIAMS = 0x194350ab5;
+        const Int64 TEAMS_OFFSET_GAME_HAAS = 0x194350b09;
+        const Int64 TEAMS_OFFSET_GAME_MCLAREN = 0x194351273;
 
         static readonly byte[] MENU_SEARCH_STR = Encoding.UTF8.GetBytes("{o:mixed}"); // GetEncoding(437)?! this is an encoding that doesn't mangle weird non-UTF8-characters like 255 and 128!
-        static readonly byte[] CHARSELECTION_SEARCH_STR = Encoding.UTF8.GetBytes("Mr HEINZ"); // he's always first, well, in some ways
+        static readonly byte[] CHARSELECTION_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos SAINZ"); // he's always first, well, in some ways
         static readonly byte[] INGAME_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos");
 
         static void Main(string[] args) {
