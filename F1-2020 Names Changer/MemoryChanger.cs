@@ -88,6 +88,12 @@ namespace F1_2020_Names_Changer {
         static readonly byte[] CHARSELECTION_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos SAINZ"); // he's always first, well, in some ways
         static readonly byte[] INGAME_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos");
 
+        // pointers to where we found the regions before (therefore allowing multiple undo cycles
+        static int menuRegion1Offset = -1;
+        static int menuRegion2Offset = -1;
+        static int charRegionOffset = -1;
+        static int ingameRegionOffset = -1;
+
         [STAThread] // for file dialog boxes
         static void Main(string[] args) {
 
@@ -128,35 +134,67 @@ namespace F1_2020_Names_Changer {
         public static void getF1Process() {
             stopRunning = false;
             if (Process.GetProcessesByName("F1_2020_dx12").Length < 1) {
-                Console.WriteLine("F1 Process not detected, waiting for game to be started");
+                log.Info("F1 Process not detected, waiting for game to be started");
                 while (Process.GetProcessesByName("F1_2020_dx12").Length < 1) {
                     System.Threading.Thread.Sleep(1000);
                     log.Trace("Waiting for F1 Thread");
                     if (stopRunning) return;
                 }
-                Console.WriteLine("F1 Process detected, waiting 20 seconds or so for game to get ready");
+                log.Info("F1 Process detected, waiting 20 seconds or so for game to get ready");
                 System.Threading.Thread.Sleep(20000);
             }
             Process process = Process.GetProcessesByName("F1_2020_dx12")[0]; // Get the F1 process
             processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, process.Id);
-            cwc("F1 Process detected", ConsoleColor.Green);
+            log.Info("F1 Process detected");
         }
 
-        public static void run(string nameLookupFile, string teamLookupFile) {
+        public static void run(string nameLookupFile, string teamLookupFile, bool reversed=false) {
             stopRunning = false;
             log.Info("Memory Changer started");
             log.Debug($"With Name lookup file: {nameLookupFile}\n and team lookup file: {teamLookupFile}");
 
             log.Info("Clearing old lookups (if any)");
-            nameLookup.Clear();
-            nameLookup_short.Clear();
-            teamLookup.Clear();
-            teamLookup_short.Clear();
-            log.Info("Loading lookup tables");
-            if (loadLookupTables(nameLookupFile, teamLookupFile)<0) {
-                gui.Stopped();
-                return;
-			}
+            if (reversed) {
+                // hopefully just use the previously used lookup tables as this is a one-time undo?
+                if (nameLookup.Count < 1) {
+                    log.Fatal("Cannot undo name changing as lookup tables are blank! Have you run the application at least once normally?");
+                    gui.Stopped();
+                    return;
+				}
+
+                // swap key and values of all lookups
+                log.Info("Reversing previous lookup tables");
+                try {
+                    nameLookup = nameLookup.ToDictionary(x => x.Value, x => x.Key);
+                    nameLookup_short = nameLookup_short.ToDictionary(x => x.Value, x => x.Key);
+                    teamLookup = teamLookup.ToDictionary(x => x.Key, x => x.Key);
+                    teamLookup_short = teamLookup_short.ToDictionary(x => x.Key, x => x.Key);
+
+                    gui.Update("lookups", 1); // green indicator
+                } catch(System.ArgumentException) {
+                    log.Error("Cannot reverse lookup tables as new names contain duplicates");
+                    gui.Update("lookups", 0); // red indicator
+                    gui.Stopped();
+                    return;
+				}
+
+            } else { 
+                nameLookup.Clear();
+                nameLookup_short.Clear();
+                teamLookup.Clear();
+                teamLookup_short.Clear();
+                log.Info("Loading lookup tables");
+                int result = loadLookupTables(nameLookupFile, teamLookupFile);
+                if (result < 0) {
+                    gui.Update("lookups", 0); // red indicator
+                    gui.Stopped();
+                    return;
+                } else if (result == 0) {
+                    gui.Update("lookups", 2); // yellow indicator
+                } else { 
+                    gui.Update("lookups", 1); // green indicator
+                }
+            }
 
             if ((int)processHandle == 0) {
                 log.Trace("Process handle blank, attempting to get process");
@@ -168,116 +206,159 @@ namespace F1_2020_Names_Changer {
                 }
             }
 
+            log.Info("Editing Menu Region 1...");
+
             // First off, let's find the start of the menu section
             IntPtr bytesRead = IntPtr.Zero;
             byte[] buffer = new byte[12000];
             ReadProcessMemory((IntPtr)processHandle, (IntPtr)MENU_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            cwc($"Read {bytesRead} bytes of RAM at {MENU_OFFSET_START:X}(Menu Region 1)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+            log.Debug($"Read {bytesRead} bytes of RAM at {MENU_OFFSET_START:X}(Menu Region 1)");
 
 
             //temppppp
             //byte[] buffer = File.ReadAllBytes(@"C:\Users\Laurie\Desktop\F1RevEng\menuMemoryRegion.hex");
 
-
-            int menuOffsetAdditional = Search(buffer, MENU_SEARCH_STR); // search because Array.indexOf sucks
-            if (menuOffsetAdditional < 0) {
-                cwc("Failed to find Menu Region 1", ConsoleColor.Red);
+            if (menuRegion1Offset<0) {
+                menuRegion1Offset = Search(buffer, MENU_SEARCH_STR); // search because Array.indexOf sucks
             } else {
-                cwc($"Found Menu Memory Region 1 Offset: {menuOffsetAdditional}", ConsoleColor.Green);
+                log.Debug("Using previously found memory region 1 offset");
+			}
+            if (menuRegion1Offset < 0) {
+                log.Error("Failed to find Menu Region 1");
+                gui.Update("region1", 0); // red indicator
+            } else {
+                log.Debug($"Found Menu Memory Region 1 Offset: {menuRegion1Offset}");
+                
+                if((int)bytesRead>0) gui.Update("region1", 1); // green indicator
+                else gui.Update("region1", 0); // red indicator
 
-                byte[] memOut = parseMenuMemoryRegion(buffer.Skip(menuOffsetAdditional).ToArray(), 39);
+                byte[] memOut = parseMenuMemoryRegion(buffer.Skip(menuRegion1Offset).ToArray(), 39);
                 // write out the memory
-                cwc("Writing new menu memory region 1 to RAM...", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                log.Debug("Writing new menu memory region 1 to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)MENU_OFFSET_START + menuOffsetAdditional, memOut, memOut.Length, out bytesWritten);
-                cwc($"Written {bytesWritten} bytes to RAM at {MENU_OFFSET_START + menuOffsetAdditional:X}(Menu Region 1)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                WriteProcessMemory((IntPtr)processHandle, (IntPtr)MENU_OFFSET_START + menuRegion1Offset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {MENU_OFFSET_START + menuRegion1Offset:X}(Menu Region 1)");
+                log.Info($"Sucesfully written to Menu Region 1");
             }
 
             // ---------------- Now for menu bit part 2 --------------
             Array.Clear(buffer, 0, buffer.Length);
+            log.Info("Editing Menu Region 2...");
 
 
             ReadProcessMemory((IntPtr)processHandle, (IntPtr)MENU2_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            cwc($"Read {bytesRead} bytes of RAM at {MENU2_OFFSET_START:X}(Menu Region 2)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+            log.Debug($"Read {bytesRead} bytes of RAM at {MENU2_OFFSET_START:X}(Menu Region 2)");
 
 
             //temppppp
             //byte[] buffer = File.ReadAllBytes(@"C:\Users\Laurie\Desktop\F1RevEng\menuMemoryRegion.hex");
 
 
-            menuOffsetAdditional = Search(buffer, MENU_SEARCH_STR); // search because Array.indexOf sucks
-            if (menuOffsetAdditional < 0) {
-                cwc("Failed to find Menu Region 2", ConsoleColor.Red);
+            if (menuRegion2Offset < 0) {
+                menuRegion2Offset = Search(buffer, MENU_SEARCH_STR); // search because Array.indexOf sucks
             } else {
-                cwc($"Found Menu Memory Region 2 Offset: {menuOffsetAdditional}", ConsoleColor.Green);
+                log.Debug("Using previously found memory region 2 offset");
+            }
+            if (menuRegion2Offset < 0) {
+                log.Error("Failed to find Menu Region 2");
+                gui.Update("region2", 0); // red indicator
 
-                byte[] memOut = parseMenuMemoryRegion(buffer.Skip(menuOffsetAdditional).ToArray(), 44); // yup, this memory region has different size structs, go figure
+            } else {
+                log.Debug($"Found Menu Memory Region 2 Offset: {menuRegion2Offset}");
+
+                if ((int)bytesRead > 0) gui.Update("region2", 1); // green indicator
+                else gui.Update("region2", 0); // red indicator
+
+                byte[] memOut = parseMenuMemoryRegion(buffer.Skip(menuRegion2Offset).ToArray(), 44); // yup, this memory region has different size structs, go figure
                 // write out the memory
-                cwc("Writing new menu memory region 2 to RAM...", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                log.Debug("Writing new menu memory region 2 to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)MENU2_OFFSET_START + menuOffsetAdditional, memOut, memOut.Length, out bytesWritten);
-                cwc($"Written {bytesWritten} bytes to RAM at {MENU2_OFFSET_START + menuOffsetAdditional:X}(Menu Region 2)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                WriteProcessMemory((IntPtr)processHandle, (IntPtr)MENU2_OFFSET_START + menuRegion2Offset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {MENU2_OFFSET_START + menuRegion2Offset:X}(Menu Region 2)");
+                log.Info($"Sucesfully written to Menu Region 2");
             }
 
 
             // ---------------- Now for in character selection section --------------
             Array.Clear(buffer, 0, buffer.Length);
 
+            log.Info("Editing Character Selection Region...");
+
 
             ReadProcessMemory((IntPtr)processHandle, (IntPtr)CHARSELECTION_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            cwc($"Read {bytesRead} bytes of RAM at {CHARSELECTION_OFFSET_START:X}(Character Selection Region)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+            log.Debug($"Read {bytesRead} bytes of RAM at {CHARSELECTION_OFFSET_START:X}(Character Selection Region)");
 
 
             //temppppp
             //byte[] buffer = File.ReadAllBytes(@"C:\Users\Laurie\Desktop\F1RevEng\menuMemoryRegion.hex");
 
-
-            menuOffsetAdditional = Search(buffer, CHARSELECTION_SEARCH_STR); // search because Array.indexOf sucks
-            if (menuOffsetAdditional < 0) {
-                cwc("Failed to find Character Selection Region", ConsoleColor.Red);
+            if (charRegionOffset < 0) {
+                charRegionOffset = Search(buffer, CHARSELECTION_SEARCH_STR); // search because Array.indexOf sucks
             } else {
-                cwc($"Found Character Selection Region: {menuOffsetAdditional}", ConsoleColor.Green);
+                log.Debug("Using previously found character selection region offset");
+            }
+            if (charRegionOffset < 0) {
+                log.Error("Failed to find Character Selection Region");
+                gui.Update("charRegion", 0); //red indicator
+            } else {
+                log.Debug($"Found Character Selection Region: {charRegionOffset}");
 
-                byte[] memOut = parseCharSelection(buffer.Skip(menuOffsetAdditional).ToArray());
+                if ((int)bytesRead > 0) gui.Update("charRegion", 1); // green indicator
+                else gui.Update("charRegion", 0); // red indicator
+
+                byte[] memOut = parseCharSelection(buffer.Skip(charRegionOffset).ToArray());
                 // write out the memory
-                cwc("Writing new Character Selection Region to RAM...", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                log.Debug("Writing new Character Selection Region to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)CHARSELECTION_OFFSET_START + menuOffsetAdditional, memOut, memOut.Length, out bytesWritten);
-                cwc($"Written {bytesWritten} bytes to RAM at {CHARSELECTION_OFFSET_START + menuOffsetAdditional:X}(Character Selection Region)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                WriteProcessMemory((IntPtr)processHandle, (IntPtr)CHARSELECTION_OFFSET_START + charRegionOffset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {CHARSELECTION_OFFSET_START + charRegionOffset:X}(Character Selection Region)");
+                log.Info($"Sucesfully written to Character Selection Region");
             }
 
             // ---------------- Now for in game section --------------
             Array.Clear(buffer, 0, buffer.Length);
 
+            log.Info("Editing In Game Region...");
+
 
             ReadProcessMemory((IntPtr)processHandle, (IntPtr)INGAME_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            cwc($"Read {bytesRead} bytes of RAM at {INGAME_OFFSET_START:X}(Game region)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+            log.Debug($"Read {bytesRead} bytes of RAM at {INGAME_OFFSET_START:X}(Game region)");
 
 
             //temppppp
             //byte[] buffer = File.ReadAllBytes(@"C:\Users\Laurie\Desktop\F1RevEng\menuMemoryRegion.hex");
 
-
-            menuOffsetAdditional = Search(buffer, INGAME_SEARCH_STR); // search because Array.indexOf sucks
-            if (menuOffsetAdditional < 0) {
-                cwc("Failed to find Game region", ConsoleColor.Red);
+            if (ingameRegionOffset < 0) {
+                ingameRegionOffset = Search(buffer, INGAME_SEARCH_STR); // search because Array.indexOf sucks
             } else {
-                cwc($"Found Game region: {menuOffsetAdditional}", ConsoleColor.Green);
+                log.Debug("Using previously found character selection region offset");
+            }
+            if (ingameRegionOffset < 0) {
+                log.Error("Failed to find Game region");
+                gui.Update("gameRegion", 0); // red indicator
+            } else {
+                log.Debug($"Found Game region: {ingameRegionOffset}");
 
-                byte[] memOut = parseInGame(buffer.Skip(menuOffsetAdditional).ToArray());
+                if ((int)bytesRead > 0) gui.Update("gameRegion", 1); // green indicator
+                else gui.Update("gameRegion", 0); // red indicator
+
+                byte[] memOut = parseInGame(buffer.Skip(ingameRegionOffset).ToArray(), reversed);
                 // write out the memory
-                cwc("Writing new Game region to RAM...", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                log.Debug("Writing new Game region to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)INGAME_OFFSET_START + menuOffsetAdditional, memOut, memOut.Length, out bytesWritten);
-                cwc($"Written {bytesWritten} bytes to RAM at {INGAME_OFFSET_START + menuOffsetAdditional:X}(Game region)", ConsoleColor.Blue, ConsoleColor.DarkYellow);
+                WriteProcessMemory((IntPtr)processHandle, (IntPtr)INGAME_OFFSET_START + ingameRegionOffset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {INGAME_OFFSET_START + ingameRegionOffset:X}(Game region)");
             }
 
             // --------------------- Now finally teams ----------------------------------------
             if (teamLookup.Count > 0) {
                 writeTeamNames(processHandle);
             } else {
-                cwc("Skipping team names as missing team lookups", ConsoleColor.Yellow);
+                log.Warn("Skipping team names as missing team lookups");
             }
+
+            log.Info("Done!");
+            gui.Finished();
         }
         static int Search(byte[] src, byte[] pattern) {
             int c = src.Length - pattern.Length + 1;
@@ -299,6 +380,7 @@ namespace F1_2020_Names_Changer {
             // after the first instance, the drivers are basically in a 64 byte recurring struct with 38 bytes reserved for the string (or more accurately 38 bytes we can push into)
             int ptr = 0;
             int lastNamePtr = 0;
+            int nameCounter = 0; // just for some nice log.info stats
 
             while (ptr < buffer.Length) {
 
@@ -306,28 +388,50 @@ namespace F1_2020_Names_Changer {
                 String oldDriver = Encoding.UTF8.GetString(buffer.Skip(ptr).Take(nameSize).ToArray()).Replace("\0", string.Empty).Trim();
                 // now strip out the name between the {} crap
                 var tempSplit = oldDriver.Split("{o:mixed}");
+                // TODO: Fix this skipping over drivers on the undo that have long names and therefore don't have {o:mixed}
+                // maybe see if it's a perfect 2-name, mixed, upper case thing then pass it?
+                String firstName;
+                String lastName;
                 if (tempSplit.Length <= 1) {
-                    goto SKIP;
+                    // double check it's not a name still by looking for "Mixed UPPER"
+                    var split = oldDriver.Split(" ");
+                    if (split.Length == 2) {
+                        if (IsAllUpper(split[1]) && split[0].Count(ch=>char.IsUpper(ch))==1) {
+                            firstName = split[0];
+                            lastName = split[1];
+                        } else {
+                            goto SKIP;
+						}
+                    } else {
+                        goto SKIP;
+                    }
+                } else {
+                    oldDriver = tempSplit[1];
+                    var nameSplit = oldDriver.Split("{/o}");
+                    firstName = nameSplit[0];
+                    lastName = nameSplit[1].Split(@"{o:upper}")[1];
                 }
-                oldDriver = tempSplit[1];
 
-                var nameSplit = oldDriver.Split("{/o}");
-                String firstName = nameSplit[0];
-                String lastName = nameSplit[1].Split(@"{o:upper}")[1];
-                cwc($"PARSEMENU: Found memory region for {firstName} {lastName}", ConsoleColor.Cyan);
+                log.Debug($"PARSEMENU: Found memory region for {firstName} {lastName}", ConsoleColor.Cyan);
 
                 // we can now lookup the name in a lookup table and replace it
                 var rName = lookupName(firstName, lastName);
 
                 if (!String.IsNullOrEmpty(rName)) {
                     String newName = generateMenuName(rName.Split(" ")[0], rName.Split(" ")[1], nameSize); // add the new menu item
+                    log.Trace($"Replacing with {newName}");
                     Buffer.BlockCopy(Encoding.UTF8.GetBytes(newName), 0, buffer, ptr, nameSize);
-                }
+                } else {
+                    log.Trace($"Failed to find lookup for name");
+				}
                 lastNamePtr = ptr + nameSize;
+                nameCounter++;
 
                 SKIP:
                 ptr += 64;
             }
+
+            log.Info($"MENUREGION: Replaced {nameCounter} names sucesfully");
 
             return buffer.Take(lastNamePtr).ToArray();
         }
@@ -337,11 +441,16 @@ namespace F1_2020_Names_Changer {
             // saying this, every driver except for SAINZ occurs at a 2x48-byte interval (probably the size of the struct used)
 
             int lastNamePtr = 0; // I like this to keep writing too far into RAM accidentally, although this doesn't work great in this case as we're jumping all over the place
+
+            int fullNameCounter = 0; // just for some nice log.info stats
+            int firstNameCounter = 0;
+            int lastNameCounter = 0;
+
             foreach (KeyValuePair<string, string> driver in nameLookup) {
-                cwc($"CHARSELECT: Searching for {driver.Key}...", ConsoleColor.Cyan);
+                log.Trace($"CHARSELECT: Searching for {driver.Key}...");
                 int ptr = 0;
                 while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key))) >= 0) {
-                    cwc($"\tCHARSELECT: Found, replacing with {driver.Value}", ConsoleColor.Green);
+                    log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value}");
 
                     // make sure we can fit it
                     byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value);
@@ -354,15 +463,17 @@ namespace F1_2020_Names_Changer {
                         if (ptr + driver.Value.Length > lastNamePtr) {
                             lastNamePtr = ptr + 24;
                         }
+                        fullNameCounter++;
                     } else {
-                        cwc($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value})", ConsoleColor.Red);
+                        log.Warn($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value})");
+                        gui.Update("charRegion", 2); // yellow
                     }
                 }
 
                 // now search for just the lastnames!
                 ptr = 0;
                 while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[1]))) >= 0) {
-                    cwc($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[1]}", ConsoleColor.Green);
+                    log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[1]}");
 
                     // make sure we can fit it
                     byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value.Split(" ")[1]);
@@ -375,15 +486,17 @@ namespace F1_2020_Names_Changer {
                         if (ptr + driver.Value.Length > lastNamePtr) {
                             lastNamePtr = ptr + 24;
                         }
+                        lastNameCounter++;
                     } else {
-                        cwc($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[1]})", ConsoleColor.Red);
+                        log.Warn($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[1]})");
+                        gui.Update("charRegion", 2); // yellow
                     }
                 }
 
                 // now search for just the firstnames!
                 ptr = 0;
                 while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[0]))) >= 0) {
-                    cwc($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[0]}", ConsoleColor.Green);
+                    log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[0]}");
 
                     // make sure we can fit it
                     byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value.Split(" ")[0]);
@@ -396,15 +509,20 @@ namespace F1_2020_Names_Changer {
                         if (ptr + driver.Value.Length > lastNamePtr) {
                             lastNamePtr = ptr + 24;
                         }
+                        firstNameCounter++;
                     } else {
-                        cwc($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[0]})", ConsoleColor.Red);
+                        log.Warn($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[0]})");
+                        gui.Update("charRegion", 2); // yellow
                     }
                 }
             }
+
+            log.Info($"CHARSELECT: Replaced {fullNameCounter} full names, {firstNameCounter} first names, and {lastNameCounter} last names sucessfully");
+
             return buffer.Take(lastNamePtr).ToArray();
         }
 
-        static byte[] parseInGame(byte[] buffer) {
+        static byte[] parseInGame(byte[] buffer, bool reversed=false) {
             // this section is always 7968 bytes??
             // names are seperated into Mixed firstname, Upper lastname, Upper shortname (3 chars); separated by 32 bytes
             // except in cases where firstname or lastname is too long (or not unique?) and then that's stored somewher else and that field is skipped. GREAT
@@ -414,6 +532,10 @@ namespace F1_2020_Names_Changer {
 
             const int regionSize = 7968;
             const int nameSize = 9;
+
+            int shortNameCounter = 0; // just for some nice log.info stats
+            int firstNameCounter = 0;
+            int lastNameCounter = 0;
 
             int ptr = 0;
             
@@ -431,22 +553,25 @@ namespace F1_2020_Names_Changer {
                         newName = newName.Split(" ")[0]; // get the first name
                         byte[] newName_bytes = Encoding.UTF8.GetBytes(newName);
                         if (newName_bytes.Length > 9) {
-                            cwc($"\tINGAME: New firstname {newName} is too long (>{nameSize}), truncating", ConsoleColor.DarkYellow); //TODO: handle these cases in some other way?
+                            log.Warn($"\tINGAME: New firstname {newName} is too long (>{nameSize}), truncating"); //TODO: handle these cases in some other way?
                             // truncation happens in the blockCopy
+                            gui.Update("gameRegion", 2); // yellow
                         }
-                        cwc($"\tINGAME: Writing new ingame firstname {line}->{newName}", ConsoleColor.Green);
+                        log.Debug($"\tINGAME: Writing new ingame firstname {line}->{newName}");
                         Array.Clear(buffer, ptr, nameSize);
                         Buffer.BlockCopy(newName_bytes, 0, buffer, ptr, Math.Min(newName.Length, 9));
+                        firstNameCounter++;
                     }
                 // driver tag
                 } else if (Regex.Match(line, @"^[A-Z]{3}$").Success) { // needs to somehow avoid surnames of 3 characters?
-                    String newTag = lookupDriverCode(line);
+                    String newTag = lookupDriverCode(line, reversed);
                     if (!String.IsNullOrWhiteSpace(newTag)) {
                         byte[] newName_bytes = Encoding.UTF8.GetBytes(newTag);
-                        cwc($"\tINGAME: Writing new ingame driver tag {line}->{newTag}", ConsoleColor.Green);
+                        log.Debug($"\tINGAME: Writing new ingame driver tag {line}->{newTag}");
                         Buffer.BlockCopy(newName_bytes, 0, buffer, ptr, Math.Min(newTag.Length, 4)); // up to 4?... it might break tbh
+                        shortNameCounter++;
                     } else {
-                        cwc($"\tINGAME: Uh oh, couldn't find who this driver code/tag lines up to: {line}", ConsoleColor.Red);
+                        log.Debug($"\tINGAME: Uh oh, couldn't find who this driver code/tag lines up to: {line}");
                     }
                     // last name
                 } else if (Regex.Match(line, @"^[A-Z]+$").Success) {
@@ -455,16 +580,21 @@ namespace F1_2020_Names_Changer {
                         newName = newName.Split(" ")[1]; // get the last name
                         byte[] newName_bytes = Encoding.UTF8.GetBytes(newName);
                         if (newName_bytes.Length > 9) {
-                            cwc($"INGAME: New lastname {newName} is too long (>{nameSize}), truncating", ConsoleColor.DarkYellow);
+                            log.Warn($"INGAME: New lastname {newName} is too long (>{nameSize}), truncating");
                             // truncation happens in the blockCopy
+                            gui.Update("gameRegion", 2); // yellow
                         }
-                        cwc($"\tINGAME: Writing new ingame lastname {line}->{newName}", ConsoleColor.Green);
+                        log.Debug($"\tINGAME: Writing new ingame lastname {line}->{newName}", ConsoleColor.Green);
                         Array.Clear(buffer, ptr, nameSize);
                         Buffer.BlockCopy(newName_bytes, 0, buffer, ptr, Math.Min(newName.Length, 9));
+                        lastNameCounter++;
                     }
                 }
                 ptr += 32;
 			}
+
+            log.Info($"INGAME: Replaced {shortNameCounter} driver tags, {firstNameCounter} first names, and {lastNameCounter} last names sucessfully");
+
             return buffer.Take(regionSize).ToArray();
 		}
 
@@ -476,13 +606,11 @@ namespace F1_2020_Names_Changer {
                     byte[] newName_bytes = Encoding.UTF8.GetBytes(dict[oldName]+"\0");
                     IntPtr bytesWritten;
                     WriteProcessMemory((IntPtr)processHandle, (IntPtr)ptr, newName_bytes, newName_bytes.Length, out bytesWritten);
-                    cwc($"\t{oldName}->{dict[oldName]} written successfully", ConsoleColor.Green);
+                    log.Debug($"\t{oldName}->{dict[oldName]} written successfully");
                 } else {
-                    cwc($"\t{oldName} not found in teams lookup, skipping", ConsoleColor.Yellow);
+                    log.Trace($"\t{oldName} not found in teams lookup, skipping");
 				}
 			}
-
-            cwc("Writing team names...", ConsoleColor.Cyan);
 
             tryCopyName("Racing Point", TEAMS_OFFSET_GAME_RACING_POINT, teamLookup_short);
             tryCopyName("Racing Point", TEAMS_OFFSET_MENU_RACING_POINT, teamLookup);
@@ -520,20 +648,25 @@ namespace F1_2020_Names_Changer {
             // firstname is expected to be mixed case (first upper), lastname is all upper case
             String newName = "";
             if (nameLookup.TryGetValue($"{firstname} {lastname}", out newName)) {
-                cwc($"\tLOOKUP: Sucessfully found new name for {firstname} {lastname}->{newName}", ConsoleColor.DarkGreen);
+                log.Debug($"LOOKUP: Sucessfully found new name for {firstname} {lastname}->{newName}");
                 return newName;
 			}
             // try and find a match?
             if (!String.IsNullOrWhiteSpace(lastname)) {
-                var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Contains(lastname.ToLower())).ToList();
-                if (possibleKeys.Count > 0) {
-                    if (possibleKeys.Count == 1) {
-                        newName = nameLookup[possibleKeys.First()];
-                        cwc($"\tLOOKUP: Found probabilistic match based on last name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}", ConsoleColor.Yellow);
-                        return newName;
+                try {
+                    var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Split(" ")[1].Contains(lastname.ToLower())).ToList();
+                    if (possibleKeys.Count > 0) {
+                        if (possibleKeys.Count == 1) {
+                            newName = nameLookup[possibleKeys.First()];
+                            log.Debug($"LOOKUP: Found probabilistic match based on last name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}");
+                            return newName;
+                        }
+                        // could at this point try checking other things, but eh, let's put the onus on the user
                     }
-                    // could at this point try checking other things, but eh, let's put the onus on the user
-                }
+				} catch (KeyNotFoundException) {
+                    log.Warn($"LOOKUP: Key error in looking up reversed name");
+                    return null;
+				}
             }
             // try firstnames?
 
@@ -542,35 +675,48 @@ namespace F1_2020_Names_Changer {
                 if (possibleKeys.Count > 0) {
                     if (possibleKeys.Count == 1) {
                         newName = nameLookup[possibleKeys.First()];
-                        cwc($"\tLOOKUP: Found probabilistic match based on first name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}", ConsoleColor.Yellow);
+                        log.Debug($"LOOKUP: Found probabilistic match based on first name for {firstname} {lastname} (Matched as {possibleKeys.First()})->{newName}");
                         return newName;
                     }
                     // could at this point try checking other things, but eh, let's put the onus on the user
                 }
             }
-            cwc($"\tLOOKUP: Failed to find a lookup for {firstname} {lastname}, skipping", ConsoleColor.Yellow);
+            log.Trace($"LOOKUP: Failed to find a lookup for {firstname} {lastname}, skipping");
             return null;
 		}
 
-        static String lookupDriverCode(String oldCode) {
+        static String lookupDriverCode(String oldCode, bool reversed = false) {
             String oldName;
-            if (Lookups.shortNames.TryGetValue(oldCode, out oldName)) {
-                String newCode;
-                if (nameLookup_short.TryGetValue(oldName, out newCode)) {
-                    return newCode;
+            if (reversed) {
+                if (nameLookup_short.TryGetValue(oldCode, out oldName)) {
+                    String newCode;
+                    if (Lookups.shortNames_rev.TryGetValue(oldName, out newCode)) {
+                        return newCode;
+                    } else {
+                        log.Warn($"Couldn't find a matching driver for tag {oldName}");
+                    }
 				} else {
-                    cwc($"\tLOOKUP:  Couldn't find a matching driver tag for {oldName}", ConsoleColor.Yellow);
+                    log.Trace($"Couldn't find a matching driver for tag {oldCode}");
 				}
-			} else {
-                cwc($"\tLOOKUP: Couldn't find a matching driver tag lookup! {oldCode}", ConsoleColor.Red);
-			}
+            } else { 
+                if (Lookups.shortNames.TryGetValue(oldCode, out oldName)) {
+                    String newCode;
+                    if (nameLookup_short.TryGetValue(oldName, out newCode)) {
+                        return newCode;
+                    } else {
+                        log.Debug($"LOOKUP:  Couldn't find a matching driver tag for {oldName}");
+                    }
+                } else {
+                    log.Debug($"LOOKUP: Couldn't find a matching driver tag lookup! {oldCode}");
+                }
+            }
             return null;
 		}
 
         static String generateMenuName(String firstname, String lastname, int nameSize) { // be aware this adds the {o:mixed} on the front so we can expand if needed!
             String newMenuItem;
             if (firstname.Length + lastname.Length > 12) {
-                cwc($"\tGENMENU1: {firstname} {lastname} exceeds 12 characters, using 2nd method of inserting names...", ConsoleColor.DarkYellow);
+                log.Trace($"\tGENMENU1: {firstname} {lastname} exceeds 12 characters, using 2nd method of inserting names...");
                 // try without the {/o} stuff? Not as tested
                 if (firstname.Length + lastname.Length > nameSize) {
                     throw new InvalidDataException($"Firstname + Lastname cannot exceed {nameSize} bytes!");
@@ -585,7 +731,7 @@ namespace F1_2020_Names_Changer {
             if (toPad < 0) {
                 throw new ArithmeticException($"New menu item exceeds {nameSize} bytes... somehow? \'" + newMenuItem+"\'");
 			}
-            cwc($"\tGENMENU1: Generated memory region for new name: {firstname} {lastname}", ConsoleColor.Green);
+            log.Debug($"\tGENMENU1: Generated memory region for new name: {firstname} {lastname}", ConsoleColor.Green);
             return newMenuItem + new string('\0',toPad);
         }
 
@@ -608,7 +754,7 @@ namespace F1_2020_Names_Changer {
                             nameLookup_short.Add((string)person.Name, (string)person.Value.tag);
                         }
                     }
-                    cwc("Loaded in json name lookup file", ConsoleColor.Green);
+                    log.Info("Loaded in json name lookup file");
                     nameLookupSuccess = true;
                 } catch (FileNotFoundException) { }
             }
@@ -633,18 +779,18 @@ namespace F1_2020_Names_Changer {
                             }
                         }
                     }
-                    cwc("Loaded in txt name lookup file", ConsoleColor.Green);
+                    log.Debug("Loaded in txt name lookup file");
                     nameLookupSuccess = true;
                 } catch (FileNotFoundException) { }
             }
 
             if (!nameLookupSuccess) {
-                cwc("Name lookup file (json or txt/csv) not found!", ConsoleColor.Red);
+                log.Error("Name lookup file (json or txt/csv) not found!");
                 return -1;
             }
 
             bool teamLookupSuccess = false;
-            if (Path.GetExtension(nameLookupFile) == ".json") {
+            if (Path.GetExtension(teamLookupFile) == ".json") {
                 try {
                     string jsonStr = File.ReadAllText(teamLookupFile);
                     dynamic json = JsonConvert.DeserializeObject(jsonStr);
@@ -657,12 +803,12 @@ namespace F1_2020_Names_Changer {
                             teamLookup_short.Add((string)team.Name, (string)team.Value.ingame);
                         }
                     }
-                    cwc("Loaded in json team lookup file", ConsoleColor.Green);
+                    log.Debug("Loaded in json team lookup file");
                     teamLookupSuccess = true;
                 } catch (FileNotFoundException) { }
             }
 
-            if (Path.GetExtension(nameLookupFile) == ".txt") {
+            if (Path.GetExtension(teamLookupFile) == ".txt") {
                 try {
                     string txtStr = File.ReadAllText(teamLookupFile);
                     using (var reader = new StringReader(txtStr)) {
@@ -681,13 +827,13 @@ namespace F1_2020_Names_Changer {
                             }
                         }
                     }
-                    cwc("Loaded in txt team lookup file", ConsoleColor.Green);
+                    log.Debug("Loaded in txt team lookup file");
                     teamLookupSuccess = true;
                 } catch (FileNotFoundException) { }
             }
 
             if (!teamLookupSuccess) {
-                cwc("Team lookup file (json or txt/csv) not found! Skipping team changing for now.", ConsoleColor.Red);
+                log.Warn("Team lookup file (json or txt/csv) not found! Skipping team changing for now.");
                 return 0;
 			}
             return 1;

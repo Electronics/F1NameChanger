@@ -62,6 +62,9 @@
 			this.splitContainer4 = new System.Windows.Forms.SplitContainer();
 			this.filePath = new System.Windows.Forms.TextBox();
 			this.treeView1 = new System.Windows.Forms.TreeView();
+			this.setLookupMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.setNameLookup = new System.Windows.Forms.ToolStripMenuItem();
+			this.setTeamLookup = new System.Windows.Forms.ToolStripMenuItem();
 			this.editorBox = new System.Windows.Forms.RichTextBox();
 			this.splitContainer3 = new System.Windows.Forms.SplitContainer();
 			this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -72,9 +75,12 @@
 			this.toolStripButtonUndo = new System.Windows.Forms.ToolStripButton();
 			this.logBox = new System.Windows.Forms.RichTextBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.setLookupMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-			this.setNameLookup = new System.Windows.Forms.ToolStripMenuItem();
-			this.setTeamLookup = new System.Windows.Forms.ToolStripMenuItem();
+			this.menuRegion2Indicator = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+			this.menuRegion1Indicator = new System.Windows.Forms.ToolStripButton();
+			this.charSelectRegionIndicator = new System.Windows.Forms.ToolStripButton();
+			this.gameRegionIndicator = new System.Windows.Forms.ToolStripButton();
+			this.lookupIndicator = new System.Windows.Forms.ToolStripButton();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -88,12 +94,12 @@
 			this.splitContainer4.Panel1.SuspendLayout();
 			this.splitContainer4.Panel2.SuspendLayout();
 			this.splitContainer4.SuspendLayout();
+			this.setLookupMenu.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
 			this.splitContainer3.Panel1.SuspendLayout();
 			this.splitContainer3.Panel2.SuspendLayout();
 			this.splitContainer3.SuspendLayout();
 			this.toolStrip1.SuspendLayout();
-			this.setLookupMenu.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// menuStrip1
@@ -198,20 +204,20 @@
 			// 
 			this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
 			this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-			this.undoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+			this.undoToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.undoToolStripMenuItem.Text = "&Undo";
 			// 
 			// redoToolStripMenuItem
 			// 
 			this.redoToolStripMenuItem.Name = "redoToolStripMenuItem";
 			this.redoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
-			this.redoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+			this.redoToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.redoToolStripMenuItem.Text = "&Redo";
 			// 
 			// toolStripSeparator7
 			// 
 			this.toolStripSeparator7.Name = "toolStripSeparator7";
-			this.toolStripSeparator7.Size = new System.Drawing.Size(141, 6);
+			this.toolStripSeparator7.Size = new System.Drawing.Size(177, 6);
 			// 
 			// cutToolStripMenuItem
 			// 
@@ -219,7 +225,7 @@
 			this.cutToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.cutToolStripMenuItem.Name = "cutToolStripMenuItem";
 			this.cutToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
-			this.cutToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+			this.cutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.cutToolStripMenuItem.Text = "Cu&t";
 			// 
 			// copyToolStripMenuItem
@@ -228,7 +234,7 @@
 			this.copyToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
 			this.copyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-			this.copyToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+			this.copyToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.copyToolStripMenuItem.Text = "&Copy";
 			// 
 			// pasteToolStripMenuItem
@@ -237,29 +243,29 @@
 			this.pasteToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.pasteToolStripMenuItem.Name = "pasteToolStripMenuItem";
 			this.pasteToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
-			this.pasteToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+			this.pasteToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.pasteToolStripMenuItem.Text = "&Paste";
 			// 
 			// toolStripSeparator8
 			// 
 			this.toolStripSeparator8.Name = "toolStripSeparator8";
-			this.toolStripSeparator8.Size = new System.Drawing.Size(141, 6);
+			this.toolStripSeparator8.Size = new System.Drawing.Size(177, 6);
 			// 
 			// selectAllToolStripMenuItem
 			// 
 			this.selectAllToolStripMenuItem.Name = "selectAllToolStripMenuItem";
-			this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+			this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.selectAllToolStripMenuItem.Text = "Select &All";
 			// 
 			// toolStripSeparator3
 			// 
 			this.toolStripSeparator3.Name = "toolStripSeparator3";
-			this.toolStripSeparator3.Size = new System.Drawing.Size(141, 6);
+			this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
 			// 
 			// fontToolStripMenuItem
 			// 
 			this.fontToolStripMenuItem.Name = "fontToolStripMenuItem";
-			this.fontToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+			this.fontToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.fontToolStripMenuItem.Text = "Font";
 			this.fontToolStripMenuItem.Click += new System.EventHandler(this.fontToolStripMenuItem_Click);
 			// 
@@ -433,8 +439,31 @@
 			this.treeView1.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView1_NodeMouseDoubleClick);
 			this.treeView1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseMove);
 			// 
+			// setLookupMenu
+			// 
+			this.setLookupMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.setNameLookup,
+            this.setTeamLookup});
+			this.setLookupMenu.Name = "setLookupMenu";
+			this.setLookupMenu.Size = new System.Drawing.Size(185, 48);
+			// 
+			// setNameLookup
+			// 
+			this.setNameLookup.Name = "setNameLookup";
+			this.setNameLookup.Size = new System.Drawing.Size(184, 22);
+			this.setNameLookup.Text = "Set as Names lookup";
+			this.setNameLookup.Click += new System.EventHandler(this.setNameLookup_Click);
+			// 
+			// setTeamLookup
+			// 
+			this.setTeamLookup.Name = "setTeamLookup";
+			this.setTeamLookup.Size = new System.Drawing.Size(184, 22);
+			this.setTeamLookup.Text = "Set as Teams lookup";
+			this.setTeamLookup.Click += new System.EventHandler(this.setTeamLookup_Click);
+			// 
 			// editorBox
 			// 
+			this.editorBox.AcceptsTab = true;
 			this.editorBox.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.editorBox.EnableAutoDragDrop = true;
 			this.editorBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -472,7 +501,13 @@
             this.toolStripProgressBar1,
             this.toolStripButtonStop,
             this.toolStripSeparator2,
-            this.toolStripButtonUndo});
+            this.toolStripButtonUndo,
+            this.toolStripSeparator4,
+            this.lookupIndicator,
+            this.menuRegion1Indicator,
+            this.menuRegion2Indicator,
+            this.charSelectRegionIndicator,
+            this.gameRegionIndicator});
 			this.toolStrip1.Location = new System.Drawing.Point(0, 0);
 			this.toolStrip1.Name = "toolStrip1";
 			this.toolStrip1.Size = new System.Drawing.Size(862, 25);
@@ -527,28 +562,66 @@
 			this.logBox.Size = new System.Drawing.Size(862, 174);
 			this.logBox.TabIndex = 0;
 			this.logBox.Text = "";
+			this.logBox.TextChanged += new System.EventHandler(this.logBox_TextChanged);
 			// 
-			// setLookupMenu
+			// menuRegion2Indicator
 			// 
-			this.setLookupMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.setNameLookup,
-            this.setTeamLookup});
-			this.setLookupMenu.Name = "setLookupMenu";
-			this.setLookupMenu.Size = new System.Drawing.Size(185, 48);
+			this.menuRegion2Indicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.menuRegion2Indicator.Enabled = false;
+			this.menuRegion2Indicator.Image = ((System.Drawing.Image)(resources.GetObject("menuRegion2Indicator.Image")));
+			this.menuRegion2Indicator.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.menuRegion2Indicator.Name = "menuRegion2Indicator";
+			this.menuRegion2Indicator.Size = new System.Drawing.Size(85, 22);
+			this.menuRegion2Indicator.Text = "MenuRegion2";
 			// 
-			// setNameLookup
+			// toolStripSeparator4
 			// 
-			this.setNameLookup.Name = "setNameLookup";
-			this.setNameLookup.Size = new System.Drawing.Size(184, 22);
-			this.setNameLookup.Text = "Set as Names lookup";
-			this.setNameLookup.Click += new System.EventHandler(this.setNameLookup_Click);
+			this.toolStripSeparator4.ForeColor = System.Drawing.SystemColors.Control;
+			this.toolStripSeparator4.Margin = new System.Windows.Forms.Padding(0, 0, 50, 0);
+			this.toolStripSeparator4.Name = "toolStripSeparator4";
+			this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
 			// 
-			// setTeamLookup
+			// menuRegion1Indicator
 			// 
-			this.setTeamLookup.Name = "setTeamLookup";
-			this.setTeamLookup.Size = new System.Drawing.Size(184, 22);
-			this.setTeamLookup.Text = "Set as Teams lookup";
-			this.setTeamLookup.Click += new System.EventHandler(this.setTeamLookup_Click);
+			this.menuRegion1Indicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.menuRegion1Indicator.Enabled = false;
+			this.menuRegion1Indicator.Image = ((System.Drawing.Image)(resources.GetObject("menuRegion1Indicator.Image")));
+			this.menuRegion1Indicator.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.menuRegion1Indicator.Name = "menuRegion1Indicator";
+			this.menuRegion1Indicator.Size = new System.Drawing.Size(85, 22);
+			this.menuRegion1Indicator.Text = "MenuRegion1";
+			// 
+			// charSelectRegionIndicator
+			// 
+			this.charSelectRegionIndicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.charSelectRegionIndicator.Enabled = false;
+			this.charSelectRegionIndicator.Image = ((System.Drawing.Image)(resources.GetObject("charSelectRegionIndicator.Image")));
+			this.charSelectRegionIndicator.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.charSelectRegionIndicator.Name = "charSelectRegionIndicator";
+			this.charSelectRegionIndicator.Size = new System.Drawing.Size(104, 22);
+			this.charSelectRegionIndicator.Text = "CharSelectRegion";
+			// 
+			// gameRegionIndicator
+			// 
+			this.gameRegionIndicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.gameRegionIndicator.Enabled = false;
+			this.gameRegionIndicator.Image = ((System.Drawing.Image)(resources.GetObject("gameRegionIndicator.Image")));
+			this.gameRegionIndicator.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.gameRegionIndicator.Name = "gameRegionIndicator";
+			this.gameRegionIndicator.Size = new System.Drawing.Size(79, 22);
+			this.gameRegionIndicator.Text = "GameRegion";
+			// 
+			// lookupIndicator
+			// 
+			this.lookupIndicator.BackColor = System.Drawing.SystemColors.Control;
+			this.lookupIndicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.lookupIndicator.Enabled = false;
+			this.lookupIndicator.ForeColor = System.Drawing.SystemColors.ControlText;
+			this.lookupIndicator.Image = ((System.Drawing.Image)(resources.GetObject("lookupIndicator.Image")));
+			this.lookupIndicator.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.lookupIndicator.Name = "lookupIndicator";
+			this.lookupIndicator.Size = new System.Drawing.Size(56, 22);
+			this.lookupIndicator.Text = "Lookups";
 			// 
 			// Form1
 			// 
@@ -576,6 +649,7 @@
 			this.splitContainer4.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).EndInit();
 			this.splitContainer4.ResumeLayout(false);
+			this.setLookupMenu.ResumeLayout(false);
 			this.splitContainer3.Panel1.ResumeLayout(false);
 			this.splitContainer3.Panel1.PerformLayout();
 			this.splitContainer3.Panel2.ResumeLayout(false);
@@ -583,7 +657,6 @@
 			this.splitContainer3.ResumeLayout(false);
 			this.toolStrip1.ResumeLayout(false);
 			this.toolStrip1.PerformLayout();
-			this.setLookupMenu.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -641,5 +714,11 @@
 		private System.Windows.Forms.ContextMenuStrip setLookupMenu;
 		private System.Windows.Forms.ToolStripMenuItem setNameLookup;
 		private System.Windows.Forms.ToolStripMenuItem setTeamLookup;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+		private System.Windows.Forms.ToolStripButton menuRegion1Indicator;
+		private System.Windows.Forms.ToolStripButton menuRegion2Indicator;
+		private System.Windows.Forms.ToolStripButton charSelectRegionIndicator;
+		private System.Windows.Forms.ToolStripButton gameRegionIndicator;
+		private System.Windows.Forms.ToolStripButton lookupIndicator;
 	}
 }

@@ -84,9 +84,12 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void start() {
+			resetIndicators();
 			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile));
 			toolStripButtonWriteF1.Enabled = false;
 			writeToF1ToolStripMenuItem.Enabled = false;
+			undoChangesToolStripMenuItem.Enabled = false;
+			toolStripButtonUndo.Enabled = false;
 			toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
 		}
 
@@ -106,9 +109,81 @@ namespace F1_2020_Names_Changer {
 			}));
 		}
 
+		public void Finished() {
+			if (toolStrip1.InvokeRequired) toolStrip1.Invoke(new MethodInvoker(delegate {
+				undoChangesToolStripMenuItem.Enabled = true; // call this from the ui thread (via the toolstrip because why not)
+				toolStripButtonUndo.Enabled = true;
+				toolStripButtonWriteF1.Enabled = true;
+				writeToF1ToolStripMenuItem.Enabled = true;
+				toolStripProgressBar1.Style = ProgressBarStyle.Blocks;
+			}));
+		}
+
+		public void Update(string item, int value) {
+			if (toolStrip1.InvokeRequired) toolStrip1.Invoke(new MethodInvoker(delegate {
+				Color c;
+				Color fc;
+				if (value==2) {
+					c = Color.Gold;
+					fc = SystemColors.ControlText; // forecolor does nothing on disabled buttons :(
+				} else if (value > 0) {
+					c = Color.SpringGreen;
+					fc = Color.White;
+				} else if (value < 0) {
+					c = SystemColors.Control;
+					fc = SystemColors.ControlText;
+				} else {
+					c = Color.LightCoral;
+					fc = Color.White;
+				}
+				switch (item) {
+					case "region1":
+						menuRegion1Indicator.BackColor = c;
+						menuRegion1Indicator.ForeColor = fc;
+						break;
+					case "region2":
+						menuRegion2Indicator.BackColor = c;
+						menuRegion2Indicator.ForeColor = fc;
+						break;
+					case "charRegion":
+						charSelectRegionIndicator.BackColor = c;
+						charSelectRegionIndicator.ForeColor = fc;
+						break;
+					case "gameRegion":
+						gameRegionIndicator.BackColor = c;
+						gameRegionIndicator.ForeColor = fc;
+						break;
+					case "lookups":
+						lookupIndicator.BackColor = c;
+						lookupIndicator.ForeColor = fc;
+						break;
+				}
+			}));
+		}
+
+		private void resetIndicators() {
+			menuRegion1Indicator.BackColor = SystemColors.Control;
+			menuRegion2Indicator.BackColor = SystemColors.Control;
+			charSelectRegionIndicator.BackColor = SystemColors.Control;
+			gameRegionIndicator.BackColor = SystemColors.Control;
+			lookupIndicator.BackColor = SystemColors.Control;
+			menuRegion1Indicator.ForeColor = SystemColors.ControlText;
+			menuRegion2Indicator.ForeColor = SystemColors.ControlText;
+			charSelectRegionIndicator.ForeColor = SystemColors.ControlText;
+			gameRegionIndicator.ForeColor = SystemColors.ControlText;
+			lookupIndicator.ForeColor = SystemColors.ControlText;
+		}
+
 		private void undo() {
+			if (MessageBox.Show("Undo is an experimental feature and may not correctly undo all changes you have made. Always restart the game to be sure", "Experimental Feature!", MessageBoxButtons.YesNo) == DialogResult.No) {
+				return;
+			}
+			resetIndicators();
+			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile, true));
 			toolStripButtonWriteF1.Enabled = false;
 			writeToF1ToolStripMenuItem.Enabled = false;
+			undoChangesToolStripMenuItem.Enabled = false;
+			toolStripButtonUndo.Enabled = false;
 			toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
 		}
 
@@ -209,8 +284,9 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void saveToolStripMenuItem_Click(object sender, EventArgs e) {
-			File.WriteAllText(Path.Combine(editorBox.Text, selectedFile), editorBox.Text);
+			File.WriteAllText(Path.Combine(filePath.Text, selectedFile), editorBox.Text);
 			willLooseChanges = false;
+			log.Info($"Saved {selectedFile}");
 		}
 
 		private void saveAsToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -305,6 +381,11 @@ namespace F1_2020_Names_Changer {
 			if (((RichTextBox)sender).ContainsFocus) {
 				willLooseChanges = true; // only if a user has changed something
 			}
+		}
+
+		private void logBox_TextChanged(object sender, EventArgs e) {
+			logBox.SelectionStart = logBox.TextLength; // autoscroll to end
+			logBox.ScrollToCaret();
 		}
 	}
 }
