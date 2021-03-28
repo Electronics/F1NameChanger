@@ -2,6 +2,8 @@ This is a memory editing tool to allow for the names in the F1 2020 game to be c
 
 I wrote this rather than using cheat engine, as I felt the scripting tools availble in cheat engine was rather limited.
 
+**I'm working on a GUI for this application, of which the latest can be found here: https://github.com/Electronics/F1NameChanger/releases/tag/v2.0.1. PR: https://github.com/Electronics/F1NameChanger/pull/6**
+
 # Running
 
 Simply download the executable from the releases section, and supply a `names.json` or `names.txt` (and optional `teams.json` or `teams.txt`) file in the same directory as a lookup table. Example files are given with all the existing names pre-filled.
