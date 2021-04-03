@@ -333,10 +333,7 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e) {
-			// to fix right click not selecting items (when bringing up context menu)
-			if (e.Button == MouseButtons.Right) {
-				treeView1.SelectedNode = e.Node;
-			}
+
 		}
 
 		private void setNameLookup_Click(object sender, EventArgs e) {
@@ -372,8 +369,8 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e) {
-			if (treeView1.SelectedNode.Tag != null) {
-				openFileToEdit(treeView1.SelectedNode.Tag.ToString());
+			if (e.Node.Tag != null) {
+				openFileToEdit(e.Node.Tag.ToString());
 			}
 		}
 
