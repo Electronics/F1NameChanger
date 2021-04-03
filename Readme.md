@@ -6,22 +6,35 @@ I wrote this rather than using cheat engine, as I felt the scripting tools avail
 
 # Running
 
-Simply download the executable from the releases section, and supply a `names.json` or `names.txt` (and optional `teams.json` or `teams.txt`) file in the same directory as a lookup table. Example files are given with all the existing names pre-filled.
-See known issues below on problems with longer names.
+Simply download the executable from the releases section. Run the application and you should get the main GUI of the program.
+![Starting Page Screenshot](screenshot.png)
+The program is split into a tree file browser on the left hand side, an editor box on the right, and a status/log area at the bottom. The Lookup tables used for the name and team changes are given either as text files (basically a `csv`), or as a more complicated `json` format.
+If a `names.json` or `names.txt` (and optional `teams.json` or `teams.txt`) file is in the same directory, these will be selected as the default lookup table (indicated with the files in the tree area appended with `[NAME]` and/or `[TEAM]`.
+Double-click or File->Open files to open them in the editor on the right and save them afterwards with File->Save or Save As.
 
-Run the executable before or after the game has started and it should do its magic! BEWARE: There is no undo button at this time! If you want to reset your driver names you will need to restart the game - no persistent changes are made to the game itself.
+To provide a differently named file as a lookup table, simply right click the file you want to use, and select `Set as Names lookup` or `Set as Teams lookup`. Once the files are correctly setup, simply click the `Write to F1` button. This can be done before or after starting the F1 game.
+Currently the program looks for the DX12 version of the F1 2020 game, but this can be changed in the source code - or let me know that one is also required for DX11.
+Any issues or errors occured will show up in the log area at the bottom, accompanied with a red/green status of the section the error occurs in. Errors during regions writing to memory may cause subsequent runs of `Write to F1` to fail to identify memory regions. The game will need to be restarted in these cases.
+
+There is an `Undo Changes` button, but this is no substitute for restarting the game and is still an untested feature! The changes are only made to the game in memory (RAM) and as soon as the game is closed, all changes are lost and reset to default.
+
+See known issues below on problems with longer names in-game.
 
 ## Config
 
-For team names, if you wish to have some lower-case sections of the name in the longer name, surround the particular bit with `{o:lower}` and `{/o}`. The short names will be displayed as-is with the upper/lower case as typed. Team names are (for the most part) not limited in length.
+Due to how the ingame-names are stored, depending on the original length of the name (lastname usually as it shows up in the sidebar), the new name can be truncated by the game to the original name's length. This means your new name can be cut-off if it's too long! I'm sadly not aware of any fix for this, so you may need to shorten names with this issue, or use a different driver with a longer name for your new driver - if possible.
+
+For team names, if you wish to have some lower-case sections of the name in the longer name, surround the particular bit with `{o:lower}` and `{/o}`. The short team names will be displayed as-is with the upper/lower case as typed. Team names are (for the most part) not limited in length.
 
 ##### `.txt`
 
 The text files are the simplest way of configuring this tool as they are basically a csv file.
 
-The text file can simply be opened as a csv file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`.
+The text file can simply be opened as a csv or text file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`.
 The teams file similarly, is one team per line: `old team name, new team name, shortened in-game name`. 
 See the example files for a list of old driver/team names.
+
+The names should always be formatted with the first name having the first letter capitalised and the rest lower case, and for the last name: always upper case. e.g. `Carlos SAINZ` would be correct, `carlos Sainz` would be wrong. This mostly only causes issues with the undo feature, so don't worry too much.
 
 ##### `.json`
 
@@ -41,5 +54,7 @@ All driver names should be in the format mixed-case first name ("Carlos"), upper
 
 - Due to how the ingame-names are stored, depending on the original length of the name (lastname usually as it shows up in the sidebar), the new name can be truncated by the game to the original name's length. As far as I can tell, this can't be easily fixed in any way (see [Reverse Engineering](Reverse%20Engineering/Reverse%20Engineering.md)) for more details on this
 - Lastnames of 3 characters might cause issues being incorrectly identified as driver tags, I don't think this is an issue unless this tool is run multiple times in sucession, or in future the game adds additional drivers with these properties
-- Lookups for 3 letter driver tags need to be completed
-- There is no Undo button!
+- Audio prompts from Jeff, subtitles and retirements will still show the old driver names. I am working on the text bits, but the audio from Jeff will likely not be able to be changed.
+- Lookups for 3 letter driver tags need to be completed for F2 and other drivers
+
+For other issues, check the Issues tab here in github, and if you can't find anyone else with the same issue, post about it! The program automatically generates a log file that should be in the same directory. If you know C# and can figure out my spaghetti code you could even try to fix it yourself!

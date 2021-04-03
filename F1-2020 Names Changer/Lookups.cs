@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace F1_2020_Names_Changer {
@@ -72,5 +73,7 @@ namespace F1_2020_Names_Changer {
 			{"VER", "Max VERSTAPPEN"},
 			{"VET", "Sebastian VETTEL"}
 		};
+
+		public static Dictionary<string, string> shortNames_rev = shortNames.ToDictionary(x => x.Value, x => x.Key);
 	}
 }
