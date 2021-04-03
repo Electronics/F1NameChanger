@@ -387,5 +387,29 @@ namespace F1_2020_Names_Changer {
 			logBox.SelectionStart = logBox.TextLength; // autoscroll to end
 			logBox.ScrollToCaret();
 		}
+
+		private void cutToolStripMenuItem_Click(object sender, EventArgs e) {
+			editorBox.Cut();
+		}
+
+		private void copyToolStripMenuItem_Click(object sender, EventArgs e) {
+			editorBox.Copy();
+		}
+
+		private void pasteToolStripMenuItem_Click(object sender, EventArgs e) {
+			editorBox.Paste();
+		}
+
+		private void selectAllToolStripMenuItem_Click(object sender, EventArgs e) {
+			editorBox.SelectAll();
+		}
+
+		private void undoToolStripMenuItem_Click(object sender, EventArgs e) {
+			editorBox.Undo();
+		}
+
+		private void redoToolStripMenuItem_Click(object sender, EventArgs e) {
+			editorBox.Redo();
+		}
 	}
 }

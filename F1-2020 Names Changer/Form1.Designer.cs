@@ -73,14 +73,14 @@
 			this.toolStripButtonStop = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
 			this.toolStripButtonUndo = new System.Windows.Forms.ToolStripButton();
-			this.logBox = new System.Windows.Forms.RichTextBox();
-			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.menuRegion2Indicator = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+			this.lookupIndicator = new System.Windows.Forms.ToolStripButton();
 			this.menuRegion1Indicator = new System.Windows.Forms.ToolStripButton();
+			this.menuRegion2Indicator = new System.Windows.Forms.ToolStripButton();
 			this.charSelectRegionIndicator = new System.Windows.Forms.ToolStripButton();
 			this.gameRegionIndicator = new System.Windows.Forms.ToolStripButton();
-			this.lookupIndicator = new System.Windows.Forms.ToolStripButton();
+			this.logBox = new System.Windows.Forms.RichTextBox();
+			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -206,6 +206,7 @@
 			this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
 			this.undoToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.undoToolStripMenuItem.Text = "&Undo";
+			this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
 			// 
 			// redoToolStripMenuItem
 			// 
@@ -213,6 +214,7 @@
 			this.redoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
 			this.redoToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.redoToolStripMenuItem.Text = "&Redo";
+			this.redoToolStripMenuItem.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator7
 			// 
@@ -227,6 +229,7 @@
 			this.cutToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
 			this.cutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.cutToolStripMenuItem.Text = "Cu&t";
+			this.cutToolStripMenuItem.Click += new System.EventHandler(this.cutToolStripMenuItem_Click);
 			// 
 			// copyToolStripMenuItem
 			// 
@@ -236,6 +239,7 @@
 			this.copyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
 			this.copyToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.copyToolStripMenuItem.Text = "&Copy";
+			this.copyToolStripMenuItem.Click += new System.EventHandler(this.copyToolStripMenuItem_Click);
 			// 
 			// pasteToolStripMenuItem
 			// 
@@ -245,6 +249,7 @@
 			this.pasteToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
 			this.pasteToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.pasteToolStripMenuItem.Text = "&Paste";
+			this.pasteToolStripMenuItem.Click += new System.EventHandler(this.pasteToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator8
 			// 
@@ -256,6 +261,7 @@
 			this.selectAllToolStripMenuItem.Name = "selectAllToolStripMenuItem";
 			this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.selectAllToolStripMenuItem.Text = "Select &All";
+			this.selectAllToolStripMenuItem.Click += new System.EventHandler(this.selectAllToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator3
 			// 
@@ -553,33 +559,24 @@
 			this.toolStripButtonUndo.Text = "Undo Changes";
 			this.toolStripButtonUndo.Click += new System.EventHandler(this.toolStripButtonUndo_Click);
 			// 
-			// logBox
-			// 
-			this.logBox.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.logBox.Location = new System.Drawing.Point(0, 0);
-			this.logBox.Name = "logBox";
-			this.logBox.ReadOnly = true;
-			this.logBox.Size = new System.Drawing.Size(862, 174);
-			this.logBox.TabIndex = 0;
-			this.logBox.Text = "";
-			this.logBox.TextChanged += new System.EventHandler(this.logBox_TextChanged);
-			// 
-			// menuRegion2Indicator
-			// 
-			this.menuRegion2Indicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-			this.menuRegion2Indicator.Enabled = false;
-			this.menuRegion2Indicator.Image = ((System.Drawing.Image)(resources.GetObject("menuRegion2Indicator.Image")));
-			this.menuRegion2Indicator.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.menuRegion2Indicator.Name = "menuRegion2Indicator";
-			this.menuRegion2Indicator.Size = new System.Drawing.Size(85, 22);
-			this.menuRegion2Indicator.Text = "MenuRegion2";
-			// 
 			// toolStripSeparator4
 			// 
 			this.toolStripSeparator4.ForeColor = System.Drawing.SystemColors.Control;
 			this.toolStripSeparator4.Margin = new System.Windows.Forms.Padding(0, 0, 50, 0);
 			this.toolStripSeparator4.Name = "toolStripSeparator4";
 			this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+			// 
+			// lookupIndicator
+			// 
+			this.lookupIndicator.BackColor = System.Drawing.SystemColors.Control;
+			this.lookupIndicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.lookupIndicator.Enabled = false;
+			this.lookupIndicator.ForeColor = System.Drawing.SystemColors.ControlText;
+			this.lookupIndicator.Image = ((System.Drawing.Image)(resources.GetObject("lookupIndicator.Image")));
+			this.lookupIndicator.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.lookupIndicator.Name = "lookupIndicator";
+			this.lookupIndicator.Size = new System.Drawing.Size(56, 22);
+			this.lookupIndicator.Text = "Lookups";
 			// 
 			// menuRegion1Indicator
 			// 
@@ -590,6 +587,16 @@
 			this.menuRegion1Indicator.Name = "menuRegion1Indicator";
 			this.menuRegion1Indicator.Size = new System.Drawing.Size(85, 22);
 			this.menuRegion1Indicator.Text = "MenuRegion1";
+			// 
+			// menuRegion2Indicator
+			// 
+			this.menuRegion2Indicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.menuRegion2Indicator.Enabled = false;
+			this.menuRegion2Indicator.Image = ((System.Drawing.Image)(resources.GetObject("menuRegion2Indicator.Image")));
+			this.menuRegion2Indicator.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.menuRegion2Indicator.Name = "menuRegion2Indicator";
+			this.menuRegion2Indicator.Size = new System.Drawing.Size(85, 22);
+			this.menuRegion2Indicator.Text = "MenuRegion2";
 			// 
 			// charSelectRegionIndicator
 			// 
@@ -611,17 +618,16 @@
 			this.gameRegionIndicator.Size = new System.Drawing.Size(79, 22);
 			this.gameRegionIndicator.Text = "GameRegion";
 			// 
-			// lookupIndicator
+			// logBox
 			// 
-			this.lookupIndicator.BackColor = System.Drawing.SystemColors.Control;
-			this.lookupIndicator.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-			this.lookupIndicator.Enabled = false;
-			this.lookupIndicator.ForeColor = System.Drawing.SystemColors.ControlText;
-			this.lookupIndicator.Image = ((System.Drawing.Image)(resources.GetObject("lookupIndicator.Image")));
-			this.lookupIndicator.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.lookupIndicator.Name = "lookupIndicator";
-			this.lookupIndicator.Size = new System.Drawing.Size(56, 22);
-			this.lookupIndicator.Text = "Lookups";
+			this.logBox.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.logBox.Location = new System.Drawing.Point(0, 0);
+			this.logBox.Name = "logBox";
+			this.logBox.ReadOnly = true;
+			this.logBox.Size = new System.Drawing.Size(862, 174);
+			this.logBox.TabIndex = 0;
+			this.logBox.Text = "";
+			this.logBox.TextChanged += new System.EventHandler(this.logBox_TextChanged);
 			// 
 			// Form1
 			// 
