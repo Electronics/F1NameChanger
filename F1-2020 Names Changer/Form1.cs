@@ -214,27 +214,37 @@ namespace F1_2020_Names_Changer {
 
 		private void checkForDefaultLookups() {
 			// see if we can find a "teams.txt" or "names.txt" or json etc
+			bool teamsFound = false;
+			bool namesFound = false;
 			foreach (TreeNode n in treeView1.Nodes[0].Nodes) {
 				if (n.Text == "teams.txt") {
+					if (teamsFound) continue;
 					log.Debug("Found existing teams.txt file, using as the default");
 					n.NodeFont = new Font(treeView1.Font, FontStyle.Bold);
 					n.Text += "[TEAM]";
 					teamsLookupFile = n.Tag.ToString();
+					teamsFound = true;
 				} else if (n.Text == "teams.json") {
+					if (teamsFound) continue;
 					log.Debug("Found existing teams.json file, using as the default");
 					n.NodeFont = new Font(treeView1.Font, FontStyle.Bold);
 					n.Text += "[TEAM]";
 					teamsLookupFile = n.Tag.ToString();
+					teamsFound = true;
 				} else if (n.Text == "names.txt") {
+					if (namesFound) continue;
 					log.Debug("Found existing teams.txt file, using as the default");
 					n.NodeFont = new Font(treeView1.Font, FontStyle.Bold);
 					n.Text += "[NAME]";
 					namesLookupFile = n.Tag.ToString();
+					namesFound = true;
 				} else if (n.Text == "names.json") {
+					if (namesFound) continue;
 					log.Debug("Found existing names.json file, using as the default");
 					n.NodeFont = new Font(treeView1.Font, FontStyle.Bold);
 					n.Text += "[NAME]";
 					namesLookupFile = n.Tag.ToString();
+					namesFound = true;
 				}
 			}
 		}
