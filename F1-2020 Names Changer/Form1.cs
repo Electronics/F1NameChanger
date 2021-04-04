@@ -329,7 +329,7 @@ namespace F1_2020_Names_Changer {
 			if (theNode != null && theNode.Tag != null) {
 				// Change the ToolTip only if the pointer moved to a new node.  
 				if (theNode.Tag.ToString() != this.toolTip1.GetToolTip(this.treeView1))
-					this.toolTip1.Show(theNode.Tag.ToString(), this.treeView1, e.Location.X+10, e.Location.Y+10);
+					this.toolTip1.Show(theNode.Tag.ToString(), this.treeView1, e.Location.X+10, e.Location.Y+10, 2000);
 
 			} else     // Pointer is not over a node so clear the ToolTip.  
 			  {
@@ -342,7 +342,10 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e) {
-
+			if (e.Button == MouseButtons.Right) {
+				// Select the clicked node
+				treeView1.SelectedNode = treeView1.GetNodeAt(e.X, e.Y);
+			}
 		}
 
 		private void setNameLookup_Click(object sender, EventArgs e) {
