@@ -155,6 +155,7 @@ namespace F1_2020_Names_Changer {
 
             log.Info("Clearing old lookups (if any)");
             if (reversed) {
+                log.Info("Reversing lookup tables");
                 // hopefully just use the previously used lookup tables as this is a one-time undo?
                 if (nameLookup.Count < 1) {
                     log.Fatal("Cannot undo name changing as lookup tables are blank! Have you run the application at least once normally?");
@@ -196,14 +197,11 @@ namespace F1_2020_Names_Changer {
                 }
             }
 
+            getF1Process(); // refind the process anyway - if the game has been restarted we won't have picked up the new process handle
             if ((int)processHandle == 0) {
-                log.Trace("Process handle blank, attempting to get process");
-                getF1Process();
-                if ((int)processHandle == 0) {
-                    log.Error("Failed to find process - was the process stopped?");
-                    gui.Stopped(false);
-                    return;
-                }
+                log.Error("Failed to find process - was the process stopped?");
+                gui.Stopped(false);
+                return;
             }
 
             log.Info("Editing Menu Region 1...");
@@ -656,7 +654,7 @@ namespace F1_2020_Names_Changer {
             // try and find a match?
             if (!String.IsNullOrWhiteSpace(lastname)) {
                 try {
-                    var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Split(" ")[1].Contains(lastname.ToLower())).ToList();
+                    var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Split(" ")[1].Equals(lastname.ToLower())).ToList();
                     if (possibleKeys.Count > 0) {
                         if (possibleKeys.Count == 1) {
                             newName = nameLookup[possibleKeys.First()];
@@ -673,7 +671,7 @@ namespace F1_2020_Names_Changer {
             // try firstnames?
 
             if (!String.IsNullOrWhiteSpace(firstname)) {
-                var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Contains(firstname.ToLower())).ToList();
+                var possibleKeys = nameLookup.Keys.Where(key => key.ToLower().Split(" ")[0].Equals(firstname.ToLower())).ToList();
                 if (possibleKeys.Count > 0) {
                     if (possibleKeys.Count == 1) {
                         newName = nameLookup[possibleKeys.First()];
