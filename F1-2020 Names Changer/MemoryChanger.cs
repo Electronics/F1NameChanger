@@ -116,9 +116,11 @@ namespace F1_2020_Names_Changer {
             }
             Process process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
             if (process.ProcessName=="F1_2020_dx12") {
+                log.Info("Detected as DX12 version, loading offsets");
                 Offsets.loadDX12();
 			}
-            if (process.ProcessName=="F1_2020") { 
+            if (process.ProcessName=="F1_2020") {
+                log.Info("Detected as DX11 version, loading offsets");
                 Offsets.loadDX11();
 			}
             processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, process.Id);
