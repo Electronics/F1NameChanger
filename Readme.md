@@ -2,6 +2,8 @@ This is a memory editing tool to allow for the names in the F1 2020 game to be c
 
 I wrote this rather than using cheat engine, as I felt the scripting tools availble in cheat engine was rather limited.
 
+Current stable version: https://github.com/Electronics/F1NameChanger/releases/tag/v2.1
+
 # Running
 
 Simply download the executable from the releases section. Run the application and you should get the main GUI of the program.
@@ -11,6 +13,7 @@ If a `names.json` or `names.txt` (and optional `teams.json` or `teams.txt`) file
 Double-click or File->Open files to open them in the editor on the right and save them afterwards with File->Save or Save As.
 
 To provide a differently named file as a lookup table, simply right click the file you want to use, and select `Set as Names lookup` or `Set as Teams lookup`. Once the files are correctly setup, simply click the `Write to F1` button. This can be done before or after starting the F1 game.
+Some example team and name lookup files can be found here as [names - example.txt](names%20-%20example.txt) and [teams - example.txt](teams%20-%20example.txt). [names.txt](names.txt) and [teams.txt](names.txt) contains all the original driver and team names so you don't need to lookup and type these in yourself.
 Currently the program looks for the DX12 version of the F1 2020 game, but this can be changed in the source code - or let me know that one is also required for DX11.
 Any issues or errors occured will show up in the log area at the bottom, accompanied with a red/green status of the section the error occurs in. Errors during regions writing to memory may cause subsequent runs of `Write to F1` to fail to identify memory regions. The game will need to be restarted in these cases.
 
