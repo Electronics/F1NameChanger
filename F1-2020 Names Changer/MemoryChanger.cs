@@ -360,10 +360,10 @@ namespace F1_2020_Names_Changer {
             log.Info("Done!");
             gui.Finished();
         }
-        static int Search(byte[] src, byte[] pattern) {
+        static int Search(byte[] src, byte[] pattern, int offset=0) {
             int c = src.Length - pattern.Length + 1;
             int j;
-            for (int i = 0; i < c; i++) {
+            for (int i = offset; i < c; i++) {
                 if (src[i] != pattern[0]) continue;
                 for (j = pattern.Length - 1; j >= 1 && src[i + j] == pattern[j]; j--) ;
                 if (j == 0) return i;
@@ -451,7 +451,7 @@ namespace F1_2020_Names_Changer {
             foreach (KeyValuePair<string, string> driver in nameLookup) {
                 log.Trace($"CHARSELECT: Searching for {driver.Key}...");
                 int ptr = 0;
-                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key))) >= 0) {
+                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key), ptr+1)) >= 0) { // ptr+1 to make sure search finds the NEXT instance of the name
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value}");
 
                     // make sure we can fit it
@@ -474,7 +474,7 @@ namespace F1_2020_Names_Changer {
 
                 // now search for just the lastnames!
                 ptr = 0;
-                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[1]))) >= 0) {
+                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[1]), ptr+1)) >= 0) {
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[1]}");
 
                     // make sure we can fit it
@@ -497,7 +497,7 @@ namespace F1_2020_Names_Changer {
 
                 // now search for just the firstnames!
                 ptr = 0;
-                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[0]))) >= 0) {
+                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[0]), ptr+1)) >= 0) {
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[0]}");
 
                     // make sure we can fit it
