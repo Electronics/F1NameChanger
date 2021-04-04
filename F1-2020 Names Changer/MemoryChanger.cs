@@ -59,7 +59,7 @@ namespace F1_2020_Names_Changer {
         const Int64 MENU_OFFSET_START = 0x2b1d12715;
         const Int64 MENU2_OFFSET_START = 0x2b1f83800;
         const Int64 CHARSELECTION_OFFSET_START = 0x2b1b5760f;
-        const Int64 INGAME_OFFSET_START = 0x2b18f7078;
+        const Int64 INGAME_OFFSET_START = 0x2b18f5000;
 
         // teams offset separately stated as there doesn't seem to be much order to how they're organised. Plus the memory locations are static
         const Int64 TEAMS_OFFSET_MENU_RACING_POINT = 0x1942e67cd;
@@ -208,7 +208,7 @@ namespace F1_2020_Names_Changer {
 
             // First off, let's find the start of the menu section
             IntPtr bytesRead = IntPtr.Zero;
-            byte[] buffer = new byte[12000];
+            byte[] buffer = new byte[24000];
             ReadProcessMemory((IntPtr)processHandle, (IntPtr)MENU_OFFSET_START, buffer, buffer.Length, out bytesRead);
             log.Debug($"Read {bytesRead} bytes of RAM at {MENU_OFFSET_START:X}(Menu Region 1)");
 
@@ -450,7 +450,7 @@ namespace F1_2020_Names_Changer {
                 log.Trace($"CHARSELECT: Searching for {driver.Key}...");
                 List<int> foundNames = new List<int>(); // hold full names we've already found - don't want to go replacing firstname/lastname after we've already changed the full name
                 int ptr = 0;
-                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key), ptr+1)) >= 0) { // ptr+1 to make sure search finds the NEXT instance of the name
+                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key), ptr)) >= 0) { // ptr+1 to make sure search finds the NEXT instance of the name
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value}");
 
                     // make sure we can fit it
@@ -470,11 +470,13 @@ namespace F1_2020_Names_Changer {
                         log.Warn($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value})");
                         gui.Update("charRegion", 2); // yellow
                     }
+
+                    ptr += 24; // move the pointer on
                 }
 
                 // now search for just the lastnames!
                 ptr = 0;
-                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[1]), ptr+1)) >= 0) {
+                while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[1]), ptr)) >= 0) {
                     if (containsNumberInRange(foundNames, ptr - 24, ptr)) {
                         log.Trace("Found name we've already replaced, skipping");
                         ptr += 24; // move on
@@ -498,6 +500,8 @@ namespace F1_2020_Names_Changer {
                         log.Warn($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[1]})");
                         gui.Update("charRegion", 2); // yellow
                     }
+
+                    ptr += 24; // move the pointer on
                 }
 
                 // now search for just the firstnames!
@@ -509,7 +513,6 @@ namespace F1_2020_Names_Changer {
                         continue; // don't change a name we've already done
                     }
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[0]}");
-                    var debugStr = Encoding.UTF8.GetString(buffer.Skip(ptr - 24).Take(50).ToArray());
 
 
                     // make sure we can fit it
@@ -528,6 +531,8 @@ namespace F1_2020_Names_Changer {
                         log.Warn($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value.Split(" ")[0]})");
                         gui.Update("charRegion", 2); // yellow
                     }
+
+                    ptr += 24; // move the pointer on
                 }
             }
 
