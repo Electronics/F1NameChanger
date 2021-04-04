@@ -55,35 +55,6 @@ namespace F1_2020_Names_Changer {
         const int PROCESS_WM_READ = 0x0010;
         const int PROCESS_ALL_ACCESS = 0x1F0FFF;
 
-        // these are addresses at which this program will start to search for the below search strings to identify the where the actual start of the region is
-        const Int64 MENU_OFFSET_START = 0x2b1d12715;
-        const Int64 MENU2_OFFSET_START = 0x2b1f83800;
-        const Int64 CHARSELECTION_OFFSET_START = 0x2b1b5760f;
-        const Int64 INGAME_OFFSET_START = 0x2b18f5000;
-
-        // teams offset separately stated as there doesn't seem to be much order to how they're organised. Plus the memory locations are static
-        const Int64 TEAMS_OFFSET_MENU_RACING_POINT = 0x1942e67cd;
-        const Int64 TEAMS_OFFSET_MENU_MERCEDES = 0x194350b33;
-        const Int64 TEAMS_OFFSET_MENU_FERRARI = 0x194350be5;
-        const Int64 TEAMS_OFFSET_MENU_RED_BULL = 0x194350db2;
-        const Int64 TEAMS_OFFSET_MENU_ALPHA_TAURI = 0x194350f1b;
-        const Int64 TEAMS_OFFSET_MENU_RENAULT = 0x19435100f;
-        const Int64 TEAMS_OFFSET_MENU_ALFA_ROMEO = 0x194351164;
-        const Int64 TEAMS_OFFSET_MENU_WILLIAMS = 0x194351248;
-        const Int64 TEAMS_OFFSET_MENU_HAAS = 0x19435141d;
-        const Int64 TEAMS_OFFSET_MENU_MCLAREN = 0x19435131c;
-
-        const Int64 TEAMS_OFFSET_GAME_RACING_POINT = 0x1942e6d54;
-        const Int64 TEAMS_OFFSET_GAME_MERCEDES = 0x194351232;
-        const Int64 TEAMS_OFFSET_GAME_FERRARI = 0x194350df6;
-        const Int64 TEAMS_OFFSET_GAME_RED_BULL = 0x194350a80;
-        const Int64 TEAMS_OFFSET_GAME_ALPHA_TAURI = 0x194350cf5;
-        const Int64 TEAMS_OFFSET_GAME_RENAULT = 0x194350e69;
-        const Int64 TEAMS_OFFSET_GAME_ALFA_ROMEO = 0x194350f84;
-        const Int64 TEAMS_OFFSET_GAME_WILLIAMS = 0x194350ab5;
-        const Int64 TEAMS_OFFSET_GAME_HAAS = 0x194350b09;
-        const Int64 TEAMS_OFFSET_GAME_MCLAREN = 0x194351273;
-
         static readonly byte[] MENU_SEARCH_STR = Encoding.UTF8.GetBytes("{o:mixed}"); // GetEncoding(437)?! this is an encoding that doesn't mangle weird non-UTF8-characters like 255 and 128!
         static readonly byte[] CHARSELECTION_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos SAINZ"); // he's always first, well, in some ways
         static readonly byte[] INGAME_SEARCH_STR = Encoding.UTF8.GetBytes("Carlos");
@@ -144,6 +115,12 @@ namespace F1_2020_Names_Changer {
                 System.Threading.Thread.Sleep(20000);
             }
             Process process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
+            if (process.ProcessName=="F1_2020_dx12") {
+                Offsets.loadDX12();
+			}
+            if (process.ProcessName=="F1_2020") { 
+                Offsets.loadDX11();
+			}
             processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, process.Id);
             log.Info("F1 Process detected");
         }
@@ -209,8 +186,8 @@ namespace F1_2020_Names_Changer {
             // First off, let's find the start of the menu section
             IntPtr bytesRead = IntPtr.Zero;
             byte[] buffer = new byte[24000];
-            ReadProcessMemory((IntPtr)processHandle, (IntPtr)MENU_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {MENU_OFFSET_START:X}(Menu Region 1)");
+            ReadProcessMemory((IntPtr)processHandle, Offsets.MENU_OFFSET_START, buffer, buffer.Length, out bytesRead);
+            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.MENU_OFFSET_START:X}(Menu Region 1)");
 
 
             //temppppp
@@ -234,8 +211,8 @@ namespace F1_2020_Names_Changer {
                 // write out the memory
                 log.Debug("Writing new menu memory region 1 to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)MENU_OFFSET_START + menuRegion1Offset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {MENU_OFFSET_START + menuRegion1Offset:X}(Menu Region 1)");
+                WriteProcessMemory((IntPtr)processHandle, Offsets.MENU_OFFSET_START + menuRegion1Offset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.MENU_OFFSET_START + menuRegion1Offset:X}(Menu Region 1)");
                 log.Info($"Sucesfully written to Menu Region 1");
             }
 
@@ -244,8 +221,8 @@ namespace F1_2020_Names_Changer {
             log.Info("Editing Menu Region 2...");
 
 
-            ReadProcessMemory((IntPtr)processHandle, (IntPtr)MENU2_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {MENU2_OFFSET_START:X}(Menu Region 2)");
+            ReadProcessMemory((IntPtr)processHandle, Offsets.MENU2_OFFSET_START, buffer, buffer.Length, out bytesRead);
+            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.MENU2_OFFSET_START:X}(Menu Region 2)");
 
 
             //temppppp
@@ -271,8 +248,8 @@ namespace F1_2020_Names_Changer {
                 // write out the memory
                 log.Debug("Writing new menu memory region 2 to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)MENU2_OFFSET_START + menuRegion2Offset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {MENU2_OFFSET_START + menuRegion2Offset:X}(Menu Region 2)");
+                WriteProcessMemory((IntPtr)processHandle, Offsets.MENU2_OFFSET_START + menuRegion2Offset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.MENU2_OFFSET_START + menuRegion2Offset:X}(Menu Region 2)");
                 log.Info($"Sucesfully written to Menu Region 2");
             }
 
@@ -283,8 +260,8 @@ namespace F1_2020_Names_Changer {
             log.Info("Editing Character Selection Region...");
 
 
-            ReadProcessMemory((IntPtr)processHandle, (IntPtr)CHARSELECTION_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {CHARSELECTION_OFFSET_START:X}(Character Selection Region)");
+            ReadProcessMemory((IntPtr)processHandle, Offsets.CHARSELECTION_OFFSET_START, buffer, buffer.Length, out bytesRead);
+            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.CHARSELECTION_OFFSET_START:X}(Character Selection Region)");
 
 
             //temppppp
@@ -308,8 +285,8 @@ namespace F1_2020_Names_Changer {
                 // write out the memory
                 log.Debug("Writing new Character Selection Region to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)CHARSELECTION_OFFSET_START + charRegionOffset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {CHARSELECTION_OFFSET_START + charRegionOffset:X}(Character Selection Region)");
+                WriteProcessMemory((IntPtr)processHandle, Offsets.CHARSELECTION_OFFSET_START + charRegionOffset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.CHARSELECTION_OFFSET_START + charRegionOffset:X}(Character Selection Region)");
                 log.Info($"Sucesfully written to Character Selection Region");
             }
 
@@ -319,8 +296,8 @@ namespace F1_2020_Names_Changer {
             log.Info("Editing In Game Region...");
 
 
-            ReadProcessMemory((IntPtr)processHandle, (IntPtr)INGAME_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {INGAME_OFFSET_START:X}(Game region)");
+            ReadProcessMemory((IntPtr)processHandle, Offsets.INGAME_OFFSET_START, buffer, buffer.Length, out bytesRead);
+            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.INGAME_OFFSET_START:X}(Game region)");
 
 
             //temppppp
@@ -344,8 +321,8 @@ namespace F1_2020_Names_Changer {
                 // write out the memory
                 log.Debug("Writing new Game region to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
-                WriteProcessMemory((IntPtr)processHandle, (IntPtr)INGAME_OFFSET_START + ingameRegionOffset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {INGAME_OFFSET_START + ingameRegionOffset:X}(Game region)");
+                WriteProcessMemory((IntPtr)processHandle, Offsets.INGAME_OFFSET_START + ingameRegionOffset, memOut, memOut.Length, out bytesWritten);
+                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.INGAME_OFFSET_START + ingameRegionOffset:X}(Game region)");
             }
 
             // --------------------- Now finally teams ----------------------------------------
@@ -620,37 +597,37 @@ namespace F1_2020_Names_Changer {
         static void writeTeamNames(IntPtr processHandle) {
             // from what I can tell, it doesn't matter how long the string is as long as it's null terminated ( we will overwrite some other stuff somewhere in the menu system, but whatever)
             // also, these are spread out a lot in memory, so better to 'punch' in and out directly, rather than reading and writing like 437k of memory
-            void tryCopyName(string oldName, long ptr, Dictionary<string,string> dict) {
+            void tryCopyName(string oldName, IntPtr ptr, Dictionary<string,string> dict) {
                 if(dict.ContainsKey(oldName)) {
                     byte[] newName_bytes = Encoding.UTF8.GetBytes(dict[oldName]+"\0");
                     IntPtr bytesWritten;
-                    WriteProcessMemory((IntPtr)processHandle, (IntPtr)ptr, newName_bytes, newName_bytes.Length, out bytesWritten);
+                    WriteProcessMemory((IntPtr)processHandle, ptr, newName_bytes, newName_bytes.Length, out bytesWritten);
                     log.Debug($"\t{oldName}->{dict[oldName]} written successfully");
                 } else {
                     log.Trace($"\t{oldName} not found in teams lookup, skipping");
 				}
 			}
 
-            tryCopyName("Racing Point", TEAMS_OFFSET_GAME_RACING_POINT, teamLookup_short);
-            tryCopyName("Racing Point", TEAMS_OFFSET_MENU_RACING_POINT, teamLookup);
-            tryCopyName("Mercedes", TEAMS_OFFSET_GAME_MERCEDES, teamLookup_short);
-            tryCopyName("Mercedes", TEAMS_OFFSET_MENU_MERCEDES, teamLookup);
-            tryCopyName("Ferrari", TEAMS_OFFSET_GAME_FERRARI, teamLookup_short);
-            tryCopyName("Ferrari", TEAMS_OFFSET_MENU_FERRARI, teamLookup);
-            tryCopyName("Red Bull", TEAMS_OFFSET_GAME_RED_BULL, teamLookup_short);
-            tryCopyName("Red Bull", TEAMS_OFFSET_MENU_RED_BULL, teamLookup);
-            tryCopyName("AlphaTauri", TEAMS_OFFSET_GAME_ALPHA_TAURI, teamLookup_short);
-            tryCopyName("AlphaTauri", TEAMS_OFFSET_MENU_ALPHA_TAURI, teamLookup);
-            tryCopyName("Renault", TEAMS_OFFSET_GAME_RENAULT, teamLookup_short);
-            tryCopyName("Renault", TEAMS_OFFSET_MENU_RENAULT, teamLookup);
-            tryCopyName("Alfa Romeo", TEAMS_OFFSET_GAME_ALFA_ROMEO, teamLookup_short);
-            tryCopyName("Alfa Romeo", TEAMS_OFFSET_MENU_ALFA_ROMEO, teamLookup);
-            tryCopyName("Williams", TEAMS_OFFSET_GAME_WILLIAMS, teamLookup_short);
-            tryCopyName("Williams", TEAMS_OFFSET_MENU_WILLIAMS, teamLookup);
-            tryCopyName("Haas", TEAMS_OFFSET_GAME_HAAS, teamLookup_short);
-            tryCopyName("Haas", TEAMS_OFFSET_MENU_HAAS, teamLookup);
-            tryCopyName("McLaren", TEAMS_OFFSET_GAME_MCLAREN, teamLookup_short);
-            tryCopyName("McLaren", TEAMS_OFFSET_MENU_MCLAREN, teamLookup);
+            tryCopyName("Racing Point", Offsets.TEAMS_OFFSET_GAME_RACING_POINT, teamLookup_short);
+            tryCopyName("Racing Point", Offsets.TEAMS_OFFSET_MENU_RACING_POINT, teamLookup);
+            tryCopyName("Mercedes", Offsets.TEAMS_OFFSET_GAME_MERCEDES, teamLookup_short);
+            tryCopyName("Mercedes", Offsets.TEAMS_OFFSET_MENU_MERCEDES, teamLookup);
+            tryCopyName("Ferrari", Offsets.TEAMS_OFFSET_GAME_FERRARI, teamLookup_short);
+            tryCopyName("Ferrari", Offsets.TEAMS_OFFSET_MENU_FERRARI, teamLookup);
+            tryCopyName("Red Bull", Offsets.TEAMS_OFFSET_GAME_RED_BULL, teamLookup_short);
+            tryCopyName("Red Bull", Offsets.TEAMS_OFFSET_MENU_RED_BULL, teamLookup);
+            tryCopyName("AlphaTauri", Offsets.TEAMS_OFFSET_GAME_ALPHA_TAURI, teamLookup_short);
+            tryCopyName("AlphaTauri", Offsets.TEAMS_OFFSET_MENU_ALPHA_TAURI, teamLookup);
+            tryCopyName("Renault", Offsets.TEAMS_OFFSET_GAME_RENAULT, teamLookup_short);
+            tryCopyName("Renault", Offsets.TEAMS_OFFSET_MENU_RENAULT, teamLookup);
+            tryCopyName("Alfa Romeo", Offsets.TEAMS_OFFSET_GAME_ALFA_ROMEO, teamLookup_short);
+            tryCopyName("Alfa Romeo", Offsets.TEAMS_OFFSET_MENU_ALFA_ROMEO, teamLookup);
+            tryCopyName("Williams", Offsets.TEAMS_OFFSET_GAME_WILLIAMS, teamLookup_short);
+            tryCopyName("Williams", Offsets.TEAMS_OFFSET_MENU_WILLIAMS, teamLookup);
+            tryCopyName("Haas", Offsets.TEAMS_OFFSET_GAME_HAAS, teamLookup_short);
+            tryCopyName("Haas", Offsets.TEAMS_OFFSET_MENU_HAAS, teamLookup);
+            tryCopyName("McLaren", Offsets.TEAMS_OFFSET_GAME_MCLAREN, teamLookup_short);
+            tryCopyName("McLaren", Offsets.TEAMS_OFFSET_MENU_MCLAREN, teamLookup);
         }
 
 
