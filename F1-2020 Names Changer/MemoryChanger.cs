@@ -269,7 +269,7 @@ namespace F1_2020_Names_Changer {
                 if ((int)bytesRead > 0) gui.Update("region2", 1); // green indicator
                 else gui.Update("region2", 0); // red indicator
 
-                byte[] memOut = parseMenuMemoryRegion(buffer.Skip(menuRegion2Offset).ToArray(), 44); // yup, this memory region has different size structs, go figure
+                byte[] memOut = parseMenuMemoryRegion(buffer.Skip(menuRegion2Offset).ToArray(), 52); // yup, this memory region has different size structs, go figure
                 // write out the memory
                 log.Debug("Writing new menu memory region 2 to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
@@ -385,7 +385,7 @@ namespace F1_2020_Names_Changer {
             while (ptr < buffer.Length) {
 
                 // take the string bit and decode it so we can do string stuff with it
-                String oldDriver = Encoding.UTF8.GetString(buffer.Skip(ptr).Take(nameSize).ToArray()).Replace("\0", string.Empty).Trim();
+                String oldDriver = Encoding.UTF8.GetString(buffer.Skip(ptr).Take(nameSize).ToArray()).Split('\0')[0].Trim();
                 // now strip out the name between the {} crap
                 var tempSplit = oldDriver.Split("{o:mixed}");
                 // TODO: Fix this skipping over drivers on the undo that have long names and therefore don't have {o:mixed}
