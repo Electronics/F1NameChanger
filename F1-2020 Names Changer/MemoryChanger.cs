@@ -448,6 +448,7 @@ namespace F1_2020_Names_Changer {
 
             foreach (KeyValuePair<string, string> driver in nameLookup) {
                 log.Trace($"CHARSELECT: Searching for {driver.Key}...");
+                List<int> foundNames = new List<int>(); // hold full names we've already found - don't want to go replacing firstname/lastname after we've already changed the full name
                 int ptr = 0;
                 while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key), ptr+1)) >= 0) { // ptr+1 to make sure search finds the NEXT instance of the name
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value}");
@@ -463,6 +464,7 @@ namespace F1_2020_Names_Changer {
                         if (ptr + driver.Value.Length > lastNamePtr) {
                             lastNamePtr = ptr + 24;
                         }
+                        foundNames.Add(ptr);
                         fullNameCounter++;
                     } else {
                         log.Warn($"\tCHARSELECT: Driver name too long to fit in Character selection memory! ({driver.Value})");
@@ -473,6 +475,11 @@ namespace F1_2020_Names_Changer {
                 // now search for just the lastnames!
                 ptr = 0;
                 while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[1]), ptr+1)) >= 0) {
+                    if (containsNumberInRange(foundNames, ptr - 24, ptr)) {
+                        log.Trace("Found name we've already replaced, skipping");
+                        ptr += 24; // move on
+                        continue; // don't change a name we've already done
+                    }
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[1]}");
 
                     // make sure we can fit it
@@ -496,7 +503,14 @@ namespace F1_2020_Names_Changer {
                 // now search for just the firstnames!
                 ptr = 0;
                 while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(driver.Key.Split(" ")[0]), ptr+1)) >= 0) {
+                    if (containsNumberInRange(foundNames, ptr - 24, ptr)) {
+                        log.Trace("Found name we've already replaced, skipping");
+                        ptr += 24; // move on
+                        continue; // don't change a name we've already done
+                    }
                     log.Debug($"\tCHARSELECT: Found, replacing with {driver.Value.Split(" ")[0]}");
+                    var debugStr = Encoding.UTF8.GetString(buffer.Skip(ptr - 24).Take(50).ToArray());
+
 
                     // make sure we can fit it
                     byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value.Split(" ")[0]);
@@ -643,6 +657,13 @@ namespace F1_2020_Names_Changer {
 
             return true;
         }
+
+        static bool containsNumberInRange(IEnumerable<int> array, int lowerBound, int higherBound) {
+            foreach (int item in array) {
+                if (item >= lowerBound && item <= higherBound) return true;
+			}
+            return false;
+		}
 
         static String lookupName(String firstname, String lastname) {
             // firstname is expected to be mixed case (first upper), lastname is all upper case
