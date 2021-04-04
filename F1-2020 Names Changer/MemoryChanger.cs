@@ -133,9 +133,9 @@ namespace F1_2020_Names_Changer {
 
         public static void getF1Process() {
             stopRunning = false;
-            if (Process.GetProcessesByName("F1_2020_dx12").Length < 1) {
+            if (Process.GetProcesses().Where(x=> x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
                 log.Info("F1 Process not detected, waiting for game to be started");
-                while (Process.GetProcessesByName("F1_2020_dx12").Length < 1) {
+                while (Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
                     System.Threading.Thread.Sleep(1000);
                     log.Trace("Waiting for F1 Thread");
                     if (stopRunning) return;
@@ -143,7 +143,7 @@ namespace F1_2020_Names_Changer {
                 log.Info("F1 Process detected, waiting 20 seconds or so for game to get ready");
                 System.Threading.Thread.Sleep(20000);
             }
-            Process process = Process.GetProcessesByName("F1_2020_dx12")[0]; // Get the F1 process
+            Process process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
             processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, process.Id);
             log.Info("F1 Process detected");
         }
