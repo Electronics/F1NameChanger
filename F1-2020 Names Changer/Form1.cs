@@ -189,7 +189,6 @@ namespace F1_2020_Names_Changer {
 
 		private void updateTree() { // useful bits from https://www.c-sharpcorner.com/article/display-sub-directories-and-files-in-treeview/
 			treeView1.Nodes.Clear();
-			toolTip1.ShowAlways = true;
 			if (filePath.Text!= "" && Directory.Exists(filePath.Text)) {
 				DirectoryInfo di = new DirectoryInfo(filePath.Text);
 				TreeNode tds = treeView1.Nodes.Add(di.Name);
@@ -330,11 +329,11 @@ namespace F1_2020_Names_Changer {
 			if (theNode != null && theNode.Tag != null) {
 				// Change the ToolTip only if the pointer moved to a new node.  
 				if (theNode.Tag.ToString() != this.toolTip1.GetToolTip(this.treeView1))
-					this.toolTip1.SetToolTip(this.treeView1, theNode.Tag.ToString());
+					this.toolTip1.Show(theNode.Tag.ToString(), this.treeView1, e.Location.X+10, e.Location.Y+10);
 
 			} else     // Pointer is not over a node so clear the ToolTip.  
 			  {
-				this.toolTip1.SetToolTip(this.treeView1, "");
+				this.toolTip1.Hide(this.treeView1);
 			}
 		}
 

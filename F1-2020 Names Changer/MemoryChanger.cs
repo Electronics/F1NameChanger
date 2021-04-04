@@ -446,6 +446,8 @@ namespace F1_2020_Names_Changer {
             int firstNameCounter = 0;
             int lastNameCounter = 0;
 
+            byte[] bufferToReturn = buffer.ToArray(); // make a copy of the buffer array so we don't end up finding names we might have already replaced!
+
             foreach (KeyValuePair<string, string> driver in nameLookup) {
                 log.Trace($"CHARSELECT: Searching for {driver.Key}...");
                 int ptr = 0;
@@ -455,8 +457,8 @@ namespace F1_2020_Names_Changer {
                     // make sure we can fit it
                     byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value);
                     if (newDriver.Length <= 24) {
-                        Array.Clear(buffer, ptr, 24);
-                        Buffer.BlockCopy(newDriver, 0, buffer, ptr, newDriver.Length);
+                        Array.Clear(bufferToReturn, ptr, 24);
+                        Buffer.BlockCopy(newDriver, 0, bufferToReturn, ptr, newDriver.Length);
                         // I think it's ok to overwrite all instances of the name, but there is typically 3 for each driver:
                         // the first padded as mentioned, is the one used in rendering
                         // the other two I'm not sure about though
@@ -478,8 +480,8 @@ namespace F1_2020_Names_Changer {
                     // make sure we can fit it
                     byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value.Split(" ")[1]);
                     if (newDriver.Length <= 24) {
-                        Array.Clear(buffer, ptr, 24);
-                        Buffer.BlockCopy(newDriver, 0, buffer, ptr, newDriver.Length);
+                        Array.Clear(bufferToReturn, ptr, 24);
+                        Buffer.BlockCopy(newDriver, 0, bufferToReturn, ptr, newDriver.Length);
                         // I think it's ok to overwrite all instances of the name, but there is typically 3 for each driver:
                         // the first padded as mentioned, is the one used in rendering
                         // the other two I'm not sure about though
@@ -501,8 +503,8 @@ namespace F1_2020_Names_Changer {
                     // make sure we can fit it
                     byte[] newDriver = Encoding.UTF8.GetBytes(driver.Value.Split(" ")[0]);
                     if (newDriver.Length <= 24) {
-                        Array.Clear(buffer, ptr, 24);
-                        Buffer.BlockCopy(newDriver, 0, buffer, ptr, newDriver.Length);
+                        Array.Clear(bufferToReturn, ptr, 24);
+                        Buffer.BlockCopy(newDriver, 0, bufferToReturn, ptr, newDriver.Length);
                         // I think it's ok to overwrite all instances of the name, but there is typically 3 for each driver:
                         // the first padded as mentioned, is the one used in rendering
                         // the other two I'm not sure about though
@@ -519,7 +521,7 @@ namespace F1_2020_Names_Changer {
 
             log.Info($"CHARSELECT: Replaced {fullNameCounter} full names, {firstNameCounter} first names, and {lastNameCounter} last names sucessfully");
 
-            return buffer.Take(lastNamePtr).ToArray();
+            return bufferToReturn.Take(lastNamePtr).ToArray();
         }
 
         static byte[] parseInGame(byte[] buffer, bool reversed=false) {
