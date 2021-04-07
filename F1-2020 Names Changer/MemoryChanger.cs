@@ -187,7 +187,7 @@ namespace F1_2020_Names_Changer {
 
             // First off, let's find the start of the menu section
             IntPtr bytesRead = IntPtr.Zero;
-            byte[] buffer = new byte[24000];
+            byte[] buffer = new byte[32000];
             ReadProcessMemory((IntPtr)processHandle, Offsets.MENU_OFFSET_START, buffer, buffer.Length, out bytesRead);
             log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.MENU_OFFSET_START:X}(Menu Region 1)");
 
