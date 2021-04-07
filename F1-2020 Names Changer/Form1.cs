@@ -420,5 +420,9 @@ namespace F1_2020_Names_Changer {
 		private void redoToolStripMenuItem_Click(object sender, EventArgs e) {
 			editorBox.Redo();
 		}
+
+		private void findOffsetsToolStripMenuItem_Click(object sender, EventArgs e) {
+			MemoryChanger.findOffsets();
+		}
 	}
 }

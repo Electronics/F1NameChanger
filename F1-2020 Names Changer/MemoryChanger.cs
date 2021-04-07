@@ -843,6 +843,45 @@ namespace F1_2020_Names_Changer {
 			}
             return 1;
         }
+
+		public static void findOffsets() {
+			getF1Process();
+			log.Info("Attempting to discover offsets... This might take a minute or so");
+			// read 5MB chunks at a time
+			byte[] buffer = new byte[5000000];
+			IntPtr bytesRead;
+			byte[] menu_search_bytearr = Encoding.UTF8.GetBytes("{o:mixed}Carlos"); // byte arrays constructed before loop for speed
+			byte[] menu2_search_bytearr = Encoding.UTF8.GetBytes("{o:mixed}Daniel");
+			byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
+			byte[] game_search_bytearr = Encoding.UTF8.GetBytes("Carlos"); // might want this to be a regex sort of thing instead
+
+			bool foundStartOffset = false;
+			// assuming 2GB? of RAM
+			for (int i = 0; i < 2e9 / buffer.Length; i++) {
+				ReadProcessMemory((IntPtr)processHandle, Offsets.SEARCH_START+i*buffer.Length, buffer, buffer.Length, out bytesRead);
+				log.Debug($"Read chunk {i}, read {bytesRead} bytes");
+				if ((int)bytesRead < buffer.Length) {
+					log.Info("Reached end of memory");
+					break;
+				}
+				// we need to search for 4 important offsets + the teams
+				// to increase speed, we only search for MENU_OFFSET first as it is always first (except the teams which are earlier in memory)
+				int foundOffset;
+				if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
+					log.Fatal($"FOUND THE MENU: 0x{foundOffset:x}");
+					foundStartOffset = true;
+				}
+
+				if (foundStartOffset) {
+					if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
+						log.Fatal($"FOUND THE MENU2: 0x{foundOffset:x}");
+					}
+					if ((foundOffset = Search(buffer, char_search_bytearr)) >= 0) {
+						log.Fatal($"FOUND THE CHAR: 0x{foundOffset:x}");
+					}
+				}
+			}
+		}
     }
     //the extension class must be declared as static
     public static class StringExtension { // why is .NETcore different to .NETframework...
