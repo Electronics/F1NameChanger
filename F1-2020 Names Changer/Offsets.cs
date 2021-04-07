@@ -36,9 +36,9 @@ namespace F1_2020_Names_Changer {
         public static IntPtr TEAMS_OFFSET_GAME_MCLAREN;
 
         public static void loadDX12() {
-            MENU_OFFSET_START = (IntPtr)0x2b1d12715;
-            MENU2_OFFSET_START = (IntPtr)0x2b1f83800;
-            CHARSELECTION_OFFSET_START = (IntPtr)0x2b1b5760f;
+            MENU_OFFSET_START = (IntPtr)0x2b1d12500;
+            MENU2_OFFSET_START = (IntPtr)0x2b1f7f800;
+            CHARSELECTION_OFFSET_START = (IntPtr)0x2b1b57000;
             INGAME_OFFSET_START = (IntPtr)0x2b18f5000;
             TEAMS_OFFSET_MENU_RACING_POINT = (IntPtr)0x1942e67cd;
             TEAMS_OFFSET_MENU_MERCEDES = (IntPtr)0x194350b33;
