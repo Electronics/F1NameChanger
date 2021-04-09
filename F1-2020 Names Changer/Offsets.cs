@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,6 +38,27 @@ namespace F1_2020_Names_Changer {
         public static IntPtr TEAMS_OFFSET_GAME_WILLIAMS;
         public static IntPtr TEAMS_OFFSET_GAME_HAAS;
         public static IntPtr TEAMS_OFFSET_GAME_MCLAREN;
+
+        public static void save() {
+            Dictionary<string, IntPtr> data = new Dictionary<string, IntPtr>() {
+                { "menuOffset", MENU_OFFSET_START },
+                { "menuOffset2", MENU2_OFFSET_START },
+                { "charOffset", CHARSELECTION_OFFSET_START },
+                {"gameOffset", INGAME_OFFSET_START }
+            };
+            string json = JsonConvert.SerializeObject(data);
+            System.IO.File.WriteAllText(@"offsets.json", json);
+        }
+
+        public static bool load() {
+            string jsonStr = System.IO.File.ReadAllText(@"offsets.json");
+            dynamic json = JsonConvert.DeserializeObject(jsonStr);
+            MENU_OFFSET_START = (IntPtr)(long)json.menuOffset.value;
+            MENU2_OFFSET_START = (IntPtr)(long)json.menuOffset2.value;
+            CHARSELECTION_OFFSET_START = (IntPtr)(long)json.charOffset.value;
+            INGAME_OFFSET_START = (IntPtr)(long)json.gameOffset.value;
+            return true;
+        }
 
         public static void loadDX12() {
             MENU_OFFSET_START = (IntPtr)0x2b1d12715;

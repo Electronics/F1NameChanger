@@ -102,7 +102,7 @@ namespace F1_2020_Names_Changer {
             stopRunning = true;
 		}
 
-        public static void getF1Process() {
+        public static void getF1Process(bool skipOffsetLoading=false) {
             stopRunning = false;
             if (Process.GetProcesses().Where(x=> x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
                 log.Info("F1 Process not detected, waiting for game to be started");
@@ -115,11 +115,11 @@ namespace F1_2020_Names_Changer {
                 System.Threading.Thread.Sleep(20000);
             }
             Process process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
-            if (process.ProcessName=="F1_2020_dx12") {
+            if (process.ProcessName=="F1_2020_dx12" && !skipOffsetLoading) {
                 log.Info("Detected as DX12 version, loading offsets");
                 Offsets.loadDX12();
 			}
-            if (process.ProcessName=="F1_2020") {
+            if (process.ProcessName== "F1_2020" && !skipOffsetLoading) {
                 log.Info("Detected as DX11 version, loading offsets");
                 Offsets.loadDX11();
 			}
@@ -127,7 +127,7 @@ namespace F1_2020_Names_Changer {
             log.Info("F1 Process detected");
         }
 
-        public static void run(string nameLookupFile, string teamLookupFile, bool reversed=false) {
+        public static void run(string nameLookupFile, string teamLookupFile, bool reversed=false, bool useCustomOffsets=false) {
             stopRunning = false;
             log.Info("Memory Changer started");
             log.Debug($"With Name lookup file: {nameLookupFile}\n and team lookup file: {teamLookupFile}");
@@ -176,7 +176,15 @@ namespace F1_2020_Names_Changer {
                 }
             }
 
-            getF1Process(); // refind the process anyway - if the game has been restarted we won't have picked up the new process handle
+            if (useCustomOffsets) {
+                log.Info("Using custom offsets");
+                if (!Offsets.load()) {
+                    useCustomOffsets = false;
+                    log.Warn("Using default offsets instead");
+				}
+			}
+
+            getF1Process(useCustomOffsets); // refind the process anyway - if the game has been restarted we won't have picked up the new process handle
             if ((int)processHandle == 0) {
                 log.Error("Failed to find process - was the process stopped?");
                 gui.Stopped(false);
@@ -851,37 +859,84 @@ namespace F1_2020_Names_Changer {
 			byte[] buffer = new byte[5000000];
 			IntPtr bytesRead;
 			byte[] menu_search_bytearr = Encoding.UTF8.GetBytes("{o:mixed}Carlos"); // byte arrays constructed before loop for speed
-			byte[] menu2_search_bytearr = Encoding.UTF8.GetBytes("{o:mixed}Daniel");
+			byte[] menu2_search_bytearr = Encoding.UTF8.GetBytes("{o:mixed}Daniel{/o} {o:upper}RIC");
 			byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
 			byte[] game_search_bytearr = Encoding.UTF8.GetBytes("Carlos"); // might want this to be a regex sort of thing instead
+            Regex teams_search_regex = new Regex(@"Red Bull Racing.{38}Williams"); //I really need to unify my variable names...
+            byte[] teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32, 0x2E, 0x35, 0x00, 0x47, 0x75, 0x65, 0x6E, 0x74, 0x68, 0x65, 0x72, 0x20, 0x53, 0x74, 0x65, 0x69, 0x6E, 0x65, 0x72, 0x00, 0x32, 0x37, 0x00, 0x4A, 0x61, 0x6D, 0x65, 0x73, 0x20, 0x4B, 0x65, 0x79, 0x00, 0x57, 0x69, 0x6C, 0x6C, 0x69, 0x61, 0x6D, 0x73, 0x00, 0x38, 0x00, 0x2D, 0x00, 0x36, 0x32, 0x36, 0x32, 0x2E, 0x35, 0x00, 0x32, 0x30, 0x30, 0x38, 0x00, 0x33, 0x35, 0x00, 0x4D, 0x65, 0x72, 0x63, 0x65, 0x64, 0x65, 0x73, 0x2D, 0x41, 0x4D, 0x47, 0x20, 0x50, 0x65, 0x74, 0x72, 0x6F, 0x6E, 0x61, 0x73, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D }; // translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
+            byte[] teams_search_menu_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D, 0x00, 0x43, 0x68, 0x61, 0x72, 0x6F, 0x75, 0x7A, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D };
+            byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00, 0x53, 0x69, 0x6C, 0x76, 0x65, 0x72, 0x73, 0x74, 0x6F, 0x6E, 0x65, 0x2C, 0x20, 0x52, 0x65, 0x69, 0x6E, 0x6F, 0x20, 0x55, 0x6E, 0x69, 0x64, 0x6F };
 
-			bool foundStartOffset = false;
-			// assuming 2GB? of RAM
-			for (int i = 0; i < 2e9 / buffer.Length; i++) {
-				ReadProcessMemory((IntPtr)processHandle, Offsets.SEARCH_START+i*buffer.Length, buffer, buffer.Length, out bytesRead);
-				log.Debug($"Read chunk {i}, read {bytesRead} bytes");
-				if ((int)bytesRead < buffer.Length) {
-					log.Info("Reached end of memory");
-					break;
+
+            bool foundCharRegion = false; // our search string finds a lot of matches on this bit, we just want the first
+            bool foundTeamsRegion = false;
+            // assuming 2GB? of RAM
+            long i = 0;
+			while (i < 6e9) {
+				ReadProcessMemory((IntPtr)processHandle, (IntPtr)((long)Offsets.SEARCH_START+i), buffer, buffer.Length, out bytesRead);
+				log.Trace($"Read chunk {i} (0x{(long)Offsets.SEARCH_START+i:x}), read {bytesRead} bytes");
+
+                if (bytesRead==(IntPtr)0) {
+                    i += 50000; // only skip forward a small amount - we can miss sections otherwise
+                    //TODO: possibly change this for a search backwards if we've just skipped past a section we can't read?
+                    continue;
 				}
+
 				// we need to search for 4 important offsets + the teams
-				// to increase speed, we only search for MENU_OFFSET first as it is always first (except the teams which are earlier in memory)
 				int foundOffset;
 				if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
-					log.Fatal($"FOUND THE MENU: 0x{foundOffset:x}");
-					foundStartOffset = true;
+                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    log.Fatal($"(Not actually fatal) FOUND THE MENU: 0x{fullOffset:x}");
+                    Offsets.MENU_OFFSET_START = (IntPtr)fullOffset - 0xb00;
 				}
 
-				if (foundStartOffset) {
-					if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
-						log.Fatal($"FOUND THE MENU2: 0x{foundOffset:x}");
-					}
-					if ((foundOffset = Search(buffer, char_search_bytearr)) >= 0) {
-						log.Fatal($"FOUND THE CHAR: 0x{foundOffset:x}");
-					}
-				}
-			}
-		}
+                if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
+                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    log.Fatal($"(Not actually fatal) FOUND THE MENU2: 0x{fullOffset:x}");
+                    Offsets.MENU2_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                }
+                if (!foundCharRegion) { // only find the first instance
+                    if ((foundOffset = Search(buffer, char_search_bytearr)) >= 0) {
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"(Not actually fatal) FOUND THE CHAR: 0x{fullOffset:x}");
+                        Offsets.CHARSELECTION_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                        foundCharRegion = true;
+                    }
+                }
+                if (!foundTeamsRegion) { // skip this slow bit after we've found it
+                    if ((foundOffset = Search(buffer, teams_search_bytearr)) >= 0) {
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"(Not actually fatal) Found the start of the main teams region: 0x{fullOffset:x}");
+                        foundTeamsRegion = true;
+                    }
+                    // the following racing point items are in a different location, before the main section
+                    if ((foundOffset = Search(buffer, teams_search_menu_racingPoint)) >= 0) {
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"(Not actually fatal) Found the racing point menu item: 0x{fullOffset:x}");
+                    }
+                    if ((foundOffset = Search(buffer, teams_search_game_racingPoint)) >= 0) {
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"(Not actually fatal) Found the racing point game item: 0x{fullOffset:x}");
+                    }
+                }
+                 
+                //Teams detection, always early on
+                /*if ((long)Offsets.SEARCH_START + i < 0x195000000) {
+                    // convert to a string with special encoding so that weird (128/256) value bytes aren't changed in length, and then search with regex
+                    string encodedBuffer = Encoding.GetEncoding(437).GetString(buffer);
+                    Match m = mainTeamRegionSearch.Match(encodedBuffer);
+                    if (m.Success) {
+                        foundOffset = m.Index;
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"Found the start of the main teams region: 0x{fullOffset:x}");
+                    }
+				}*/
+
+                i += buffer.Length;
+            }
+            log.Info("Finished searching for offsets");
+            Offsets.save();
+        }
     }
     //the extension class must be declared as static
     public static class StringExtension { // why is .NETcore different to .NETframework...

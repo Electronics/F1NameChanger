@@ -85,7 +85,7 @@ namespace F1_2020_Names_Changer {
 
 		private void start() {
 			resetIndicators();
-			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile));
+			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile, false, useCustomOffset.Checked));
 			toolStripButtonWriteF1.Enabled = false;
 			writeToF1ToolStripMenuItem.Enabled = false;
 			undoChangesToolStripMenuItem.Enabled = false;
@@ -179,7 +179,7 @@ namespace F1_2020_Names_Changer {
 				return;
 			}
 			resetIndicators();
-			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile, true));
+			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile, true, useCustomOffset.Checked));
 			toolStripButtonWriteF1.Enabled = false;
 			writeToF1ToolStripMenuItem.Enabled = false;
 			undoChangesToolStripMenuItem.Enabled = false;
@@ -317,6 +317,7 @@ namespace F1_2020_Names_Changer {
 				fd.Font = editorBox.Font;
 				if (fd.ShowDialog() == DialogResult.OK) {
 					editorBox.Font = fd.Font;
+					logBox.Font = fd.Font;
 				}
 			}
 		}
@@ -422,7 +423,8 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void findOffsetsToolStripMenuItem_Click(object sender, EventArgs e) {
-			MemoryChanger.findOffsets();
+			Task.Run(() => MemoryChanger.findOffsets());
+			useCustomOffset.Checked = true;
 		}
 	}
 }

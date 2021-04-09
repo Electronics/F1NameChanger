@@ -49,6 +49,7 @@
 			this.writeToF1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.stopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.undoChangesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.findOffsetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.indexToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
@@ -81,7 +82,7 @@
 			this.gameRegionIndicator = new System.Windows.Forms.ToolStripButton();
 			this.logBox = new System.Windows.Forms.RichTextBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.findOffsetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.useCustomOffset = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -282,7 +283,8 @@
             this.writeToF1ToolStripMenuItem,
             this.stopToolStripMenuItem,
             this.undoChangesToolStripMenuItem,
-            this.findOffsetsToolStripMenuItem});
+            this.findOffsetsToolStripMenuItem,
+            this.useCustomOffset});
 			this.gameToolStripMenuItem.Name = "gameToolStripMenuItem";
 			this.gameToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
 			this.gameToolStripMenuItem.Text = "Game";
@@ -308,6 +310,13 @@
 			this.undoChangesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.undoChangesToolStripMenuItem.Text = "Undo Changes";
 			this.undoChangesToolStripMenuItem.Click += new System.EventHandler(this.undoChangesToolStripMenuItem_Click);
+			// 
+			// findOffsetsToolStripMenuItem
+			// 
+			this.findOffsetsToolStripMenuItem.Name = "findOffsetsToolStripMenuItem";
+			this.findOffsetsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.findOffsetsToolStripMenuItem.Text = "Find Offsets";
+			this.findOffsetsToolStripMenuItem.Click += new System.EventHandler(this.findOffsetsToolStripMenuItem_Click);
 			// 
 			// helpToolStripMenuItem1
 			// 
@@ -631,12 +640,12 @@
 			this.logBox.Text = "";
 			this.logBox.TextChanged += new System.EventHandler(this.logBox_TextChanged);
 			// 
-			// findOffsetsToolStripMenuItem
+			// useCustomOffset
 			// 
-			this.findOffsetsToolStripMenuItem.Name = "findOffsetsToolStripMenuItem";
-			this.findOffsetsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-			this.findOffsetsToolStripMenuItem.Text = "Find Offsets";
-			this.findOffsetsToolStripMenuItem.Click += new System.EventHandler(this.findOffsetsToolStripMenuItem_Click);
+			this.useCustomOffset.CheckOnClick = true;
+			this.useCustomOffset.Name = "useCustomOffset";
+			this.useCustomOffset.Size = new System.Drawing.Size(180, 22);
+			this.useCustomOffset.Text = "Use Custom Offset";
 			// 
 			// Form1
 			// 
@@ -736,5 +745,6 @@
 		private System.Windows.Forms.ToolStripButton gameRegionIndicator;
 		private System.Windows.Forms.ToolStripButton lookupIndicator;
 		private System.Windows.Forms.ToolStripMenuItem findOffsetsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem useCustomOffset;
 	}
 }
