@@ -1025,7 +1025,7 @@ namespace F1_2020_Names_Changer {
 
                 i += buffer.Length;
             }
-            log.Info("Finished searching for offsets");
+            log.Info($"Finished searching for offsets at {(long)Offsets.SEARCH_START + i:x}");
             Offsets.save();
             if (foundMenuRegion1&&foundMenuRegion2&&foundCharRegion&&foundGameRegion&&foundTeamsRegion&&foundRacingPoint&&foundRacingPointGame) {
                 log.Info("SUCCESS: Found all expected offsets (unless there was duplicates)");
