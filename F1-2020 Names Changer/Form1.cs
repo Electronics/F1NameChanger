@@ -421,7 +421,8 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void copyToolStripMenuItem_Click(object sender, EventArgs e) {
-			editorBox.Copy();
+			if (editorBox.Focused) editorBox.Copy();
+			if (logBox.Focused) logBox.Copy();
 		}
 
 		private void pasteToolStripMenuItem_Click(object sender, EventArgs e) {

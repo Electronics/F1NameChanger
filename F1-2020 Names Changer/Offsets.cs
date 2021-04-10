@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace F1_2020_Names_Changer {
 	static class Offsets {
 
-		public static IntPtr SEARCH_START = (IntPtr)0x194000000; // used for searching for below offsets if they don't work
+		public static IntPtr SEARCH_START = (IntPtr)0x190000000; // used for searching for below offsets if they don't work
 
 		// these are addresses at which this program will start to search for the below search strings to identify the where the actual start of the region is
 		public static IntPtr MENU_OFFSET_START;
