@@ -132,7 +132,7 @@ namespace F1_2020_Names_Changer {
 
 
 				if (tryFindOffsets) {
-					DialogResult dialogResult = MessageBox.Show("It looks like some areas of memory were not found properly. Consider trying \"Game->Find Custom Offsets\" to find customised offsets for your game and then re-run.\n NB: \"Find Custom Offsets\" should be done on a fresh-restart of the game (where no memory changing has taken place), otherwise it may fail!", "Custom Offsets", MessageBoxButtons.OK);
+					DialogResult dialogResult = MessageBox.Show("It looks like some areas of memory were not found properly. Consider trying \"Game->Find Offsets\" to find customised offsets for your game and then re-run.\n NB: \"Find Offsets\" should be done on a fresh-restart of the game (where no memory changing has taken place), otherwise it may fail!", "Custom Offsets", MessageBoxButtons.OK);
 				}
 			}));
 		}
@@ -443,6 +443,7 @@ namespace F1_2020_Names_Changer {
 		private void findOffsetsToolStripMenuItem_Click(object sender, EventArgs e) {
 			Task.Run(() => MemoryChanger.findOffsets());
 			useCustomOffset.Checked = true;
+			haveShownCustomOffsetsPopup = true;
 		}
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
 			bool bHandled = false;
