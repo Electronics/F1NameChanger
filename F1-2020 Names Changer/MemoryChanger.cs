@@ -129,6 +129,7 @@ namespace F1_2020_Names_Changer {
 
         public static void run(string nameLookupFile, string teamLookupFile, bool reversed=false, bool useCustomOffsets=false) {
             stopRunning = false;
+            bool missingRegions = false; // used to indicate whether we should ask the user to try finding custom offsets instead
             log.Info("Memory Changer started");
             log.Debug($"With Name lookup file: {nameLookupFile}\n and team lookup file: {teamLookupFile}");
 
@@ -211,6 +212,7 @@ namespace F1_2020_Names_Changer {
             if (menuRegion1Offset < 0) {
                 log.Error("Failed to find Menu Region 1");
                 gui.Update("region1", 0); // red indicator
+                missingRegions = true;
             } else {
                 log.Debug($"Found Menu Memory Region 1 Offset: {menuRegion1Offset}");
                 
@@ -247,7 +249,7 @@ namespace F1_2020_Names_Changer {
             if (menuRegion2Offset < 0) {
                 log.Error("Failed to find Menu Region 2");
                 gui.Update("region2", 0); // red indicator
-
+                missingRegions = true;
             } else {
                 log.Debug($"Found Menu Memory Region 2 Offset: {menuRegion2Offset}");
 
@@ -285,6 +287,7 @@ namespace F1_2020_Names_Changer {
             if (charRegionOffset < 0) {
                 log.Error("Failed to find Character Selection Region");
                 gui.Update("charRegion", 0); //red indicator
+                missingRegions = true;
             } else {
                 log.Debug($"Found Character Selection Region: {charRegionOffset}");
 
@@ -321,6 +324,7 @@ namespace F1_2020_Names_Changer {
             if (ingameRegionOffset < 0) {
                 log.Error("Failed to find Game region");
                 gui.Update("gameRegion", 0); // red indicator
+                missingRegions = true;
             } else {
                 log.Debug($"Found Game region: {ingameRegionOffset}");
 
@@ -343,16 +347,18 @@ namespace F1_2020_Names_Changer {
 				ReadProcessMemory((IntPtr)processHandle, Offsets.TEAMS_OFFSET_START, buffer, buffer.Length, out bytesRead);
 				log.Debug($"Read {bytesRead} bytes of RAM at {(long)Offsets.TEAMS_OFFSET_START:x}(Team region)");
 
-				if ((int)bytesRead > 0) gui.Update("teamRegion", 1); // green indicator
-				else gui.Update("teamRegion", 0); // red indicator
-
-				writeTeamNames(processHandle, buffer, reversed);
+                if ((int)bytesRead > 0) gui.Update("teamRegion", 1); // green indicator
+                else {
+                    gui.Update("teamRegion", 0); // red indicator
+                    missingRegions = true;
+                }
+                writeTeamNames(processHandle, buffer, reversed);
             } else {
                 log.Warn("Skipping team names as missing team lookups");
             }
 
             log.Info("Done!");
-            gui.Finished();
+            gui.Finished(missingRegions);
         }
         static int Search(byte[] src, byte[] pattern, int offset=0) {
             int c = src.Length - pattern.Length + 1;
@@ -927,14 +933,19 @@ namespace F1_2020_Names_Changer {
 			byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
             byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x08, 0x00, 0x00, 0x00, 0x8A, 0xD7, 0x01, 0x0E, 0x02, 0x00, 0x00, 0x00, 0x78, 0x73, 0x8F, 0xB1, 0x02, 0x00, 0x00, 0x00, 0x53, 0x41, 0x49, 0x4E, 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x08, 0x00, 0x00, 0x00, 0xA2, 0x1C, 0x88, 0x0B, 0x02, 0x00, 0x00, 0x00, 0x98, 0x73, 0x8F, 0xB1, 0x02 }; // Carlos...... SAINZ....SAI
             Regex teams_search_regex = new Regex(@"Red Bull Racing.{38}Williams"); //I really need to unify my variable names...
-            byte[] teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32, 0x2E, 0x35, 0x00, 0x47, 0x75, 0x65, 0x6E, 0x74, 0x68, 0x65, 0x72, 0x20, 0x53, 0x74, 0x65, 0x69, 0x6E, 0x65, 0x72, 0x00, 0x32, 0x37, 0x00, 0x4A, 0x61, 0x6D, 0x65, 0x73, 0x20, 0x4B, 0x65, 0x79, 0x00, 0x57, 0x69, 0x6C, 0x6C, 0x69, 0x61, 0x6D, 0x73, 0x00, 0x38, 0x00, 0x2D, 0x00, 0x36, 0x32, 0x36, 0x32, 0x2E, 0x35, 0x00, 0x32, 0x30, 0x30, 0x38, 0x00, 0x33, 0x35, 0x00, 0x4D, 0x65, 0x72, 0x63, 0x65, 0x64, 0x65, 0x73, 0x2D, 0x41, 0x4D, 0x47, 0x20, 0x50, 0x65, 0x74, 0x72, 0x6F, 0x6E, 0x61, 0x73, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D }; // translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
+            byte[] teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32, 0x2E, 0x35, 0x00, 0x47, 0x75, 0x65, 0x6E, 0x74, 0x68, 0x65, 0x72, 0x20, 0x53, 0x74, 0x65, 0x69, 0x6E, 0x65, 0x72, 0x00, 0x32, 0x37, 0x00, 0x4A, 0x61, 0x6D, 0x65, 0x73, 0x20, 0x4B, 0x65, 0x79, 0x00, 0x57, 0x69, 0x6C, 0x6C, 0x69, 0x61, 0x6D, 0x73, 0x00, 0x38, 0x00 }; // translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
             byte[] teams_search_menu_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D, 0x00, 0x43, 0x68, 0x61, 0x72, 0x6F, 0x75, 0x7A, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D };
-            byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00, 0x53, 0x69, 0x6C, 0x76, 0x65, 0x72, 0x73, 0x74, 0x6F, 0x6E, 0x65, 0x2C, 0x20, 0x52, 0x65, 0x69, 0x6E, 0x6F, 0x20, 0x55, 0x6E, 0x69, 0x64, 0x6F };
+            byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00 };
 
 
             bool foundCharRegion = false; // our search string finds a lot of matches on this bit, we just want the first
             bool foundTeamsRegion = false;
             bool foundRacingPoint = false; // we only want the first one (in local language)
+            // rest of these are just for feedback to the user
+            bool foundRacingPointGame = false;
+            bool foundGameRegion = false;
+            bool foundMenuRegion1 = false;
+            bool foundMenuRegion2 = false;
             // assuming 2GB? of RAM
             long i = 0;
 			while (i < 6e9) {
@@ -951,27 +962,30 @@ namespace F1_2020_Names_Changer {
 				int foundOffset;
 				if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
                     long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
-                    log.Fatal($"(Not actually fatal) FOUND THE MENU: 0x{fullOffset:x}");
+                    log.Fatal($"(Not actually fatal) Found menu region 1: 0x{fullOffset:x}");
                     Offsets.MENU_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                    foundMenuRegion1 = true;
 				}
 
                 if ((foundOffset = Search(buffer, menu2_search_bytearr)) >= 0) {
                     long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
-                    log.Fatal($"(Not actually fatal) FOUND THE MENU2: 0x{fullOffset:x}");
+                    log.Fatal($"(Not actually fatal) Found menu region 2: 0x{fullOffset:x}");
                     Offsets.MENU2_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                    foundMenuRegion2 = true;
                 }
                 if (!foundCharRegion) { // only find the first instance
                     if ((foundOffset = Search(buffer, char_search_bytearr)) >= 0) {
                         long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
-                        log.Fatal($"(Not actually fatal) FOUND THE CHAR: 0x{fullOffset:x}");
+                        log.Fatal($"(Not actually fatal) Found character region: 0x{fullOffset:x}");
                         Offsets.CHARSELECTION_OFFSET_START = (IntPtr)fullOffset - 0xb00;
                         foundCharRegion = true;
                     }
                 }
                 if ((foundOffset = Search(buffer, game_search_bytearr)) >= 0) {
                     long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
-                    log.Fatal($"(Not actually fatal) FOUND THE GAME: 0x{fullOffset:x}");
+                    log.Fatal($"(Not actually fatal) Found in-game region: 0x{fullOffset:x}");
                     Offsets.INGAME_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                    foundGameRegion = true;
                 }
                 if (!foundTeamsRegion) { // skip this slow bit after we've found it
                     if ((foundOffset = Search(buffer, teams_search_bytearr)) >= 0) {
@@ -993,6 +1007,7 @@ namespace F1_2020_Names_Changer {
                         long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
                         log.Fatal($"(Not actually fatal) Found the racing point game item: 0x{fullOffset:x}");
                         Offsets.TEAMS_OFFSET_GAME_RACING_POINT = (IntPtr)fullOffset;
+                        foundRacingPointGame = true;
                     }
                 }
                  
@@ -1012,6 +1027,11 @@ namespace F1_2020_Names_Changer {
             }
             log.Info("Finished searching for offsets");
             Offsets.save();
+            if (foundMenuRegion1&&foundMenuRegion2&&foundCharRegion&&foundGameRegion&&foundTeamsRegion&&foundRacingPoint&&foundRacingPointGame) {
+                log.Info("SUCCESS: Found all expected offsets (unless there was duplicates)");
+			} else {
+                log.Warn("Failed to find one or more regions, this may cause some names and/or teams to be missed. Either try restarting the game and running \"Find Offsets\" again (In the Game menu), or disable custom offsets and use the default english offsets");
+			}
         }
     }
     //the extension class must be declared as static

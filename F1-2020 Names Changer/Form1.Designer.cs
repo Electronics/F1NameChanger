@@ -50,6 +50,7 @@
 			this.stopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.undoChangesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.findOffsetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.useCustomOffset = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.indexToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
@@ -82,7 +83,6 @@
 			this.gameRegionIndicator = new System.Windows.Forms.ToolStripButton();
 			this.logBox = new System.Windows.Forms.RichTextBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.useCustomOffset = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -317,6 +317,13 @@
 			this.findOffsetsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.findOffsetsToolStripMenuItem.Text = "Find Offsets";
 			this.findOffsetsToolStripMenuItem.Click += new System.EventHandler(this.findOffsetsToolStripMenuItem_Click);
+			// 
+			// useCustomOffset
+			// 
+			this.useCustomOffset.CheckOnClick = true;
+			this.useCustomOffset.Name = "useCustomOffset";
+			this.useCustomOffset.Size = new System.Drawing.Size(180, 22);
+			this.useCustomOffset.Text = "Use Custom Offset";
 			// 
 			// helpToolStripMenuItem1
 			// 
@@ -639,13 +646,6 @@
 			this.logBox.TabIndex = 0;
 			this.logBox.Text = "";
 			this.logBox.TextChanged += new System.EventHandler(this.logBox_TextChanged);
-			// 
-			// useCustomOffset
-			// 
-			this.useCustomOffset.CheckOnClick = true;
-			this.useCustomOffset.Name = "useCustomOffset";
-			this.useCustomOffset.Size = new System.Drawing.Size(180, 22);
-			this.useCustomOffset.Text = "Use Custom Offset";
 			// 
 			// Form1
 			// 
