@@ -15,6 +15,7 @@ namespace F1_2020_Names_Changer {
         public static IntPtr MENU2_OFFSET_START;
         public static IntPtr CHARSELECTION_OFFSET_START;
         public static IntPtr INGAME_OFFSET_START;
+        public static IntPtr TEAMS_OFFSET_START; // NB: doesn't include racing point
 
         // teams offset separately stated as there doesn't seem to be much order to how they're organised. Plus the memory locations are static
         public static IntPtr TEAMS_OFFSET_MENU_RACING_POINT;
@@ -44,7 +45,10 @@ namespace F1_2020_Names_Changer {
                 { "menuOffset", MENU_OFFSET_START },
                 { "menuOffset2", MENU2_OFFSET_START },
                 { "charOffset", CHARSELECTION_OFFSET_START },
-                {"gameOffset", INGAME_OFFSET_START }
+                {"gameOffset", INGAME_OFFSET_START },
+                {"teamsOffset", TEAMS_OFFSET_START },
+                {"racingPointMenu", TEAMS_OFFSET_MENU_RACING_POINT },
+                {"racingPointGame", TEAMS_OFFSET_GAME_RACING_POINT }
             };
             string json = JsonConvert.SerializeObject(data);
             System.IO.File.WriteAllText(@"offsets.json", json);
@@ -57,6 +61,9 @@ namespace F1_2020_Names_Changer {
             MENU2_OFFSET_START = (IntPtr)(long)json.menuOffset2.value;
             CHARSELECTION_OFFSET_START = (IntPtr)(long)json.charOffset.value;
             INGAME_OFFSET_START = (IntPtr)(long)json.gameOffset.value;
+            TEAMS_OFFSET_START = (IntPtr)(long)json.teamsOffset.value;
+            TEAMS_OFFSET_MENU_RACING_POINT = (IntPtr)(long)json.racingPointMenu.value;
+            TEAMS_OFFSET_GAME_RACING_POINT = (IntPtr)(long)json.racingPointGame.value;
             return true;
         }
 
@@ -85,6 +92,7 @@ namespace F1_2020_Names_Changer {
             TEAMS_OFFSET_GAME_WILLIAMS = (IntPtr)0x194350ab5;
             TEAMS_OFFSET_GAME_HAAS = (IntPtr)0x194350b09;
             TEAMS_OFFSET_GAME_MCLAREN = (IntPtr)0x194351273;
+            TEAMS_OFFSET_START = TEAMS_OFFSET_GAME_RED_BULL;
         }
 
         public static void loadDX11() {
@@ -112,6 +120,7 @@ namespace F1_2020_Names_Changer {
             TEAMS_OFFSET_GAME_WILLIAMS = (IntPtr)0x193a10ab5;
             TEAMS_OFFSET_GAME_HAAS = (IntPtr)0x193a10b09;
             TEAMS_OFFSET_GAME_MCLAREN = (IntPtr)0x193a11273;
+            TEAMS_OFFSET_START = TEAMS_OFFSET_GAME_RED_BULL;
         }
     }
 }

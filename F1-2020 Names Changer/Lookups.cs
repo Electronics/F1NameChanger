@@ -75,5 +75,34 @@ namespace F1_2020_Names_Changer {
 		};
 
 		public static Dictionary<string, string> shortNames_rev = shortNames.ToDictionary(x => x.Value, x => x.Key);
+
+		public static Dictionary<string, string> teams = new Dictionary<string, string>() { // used for looking up found team names in memory to our lookup names
+			{"Alfa Romeo Racing Orlen", "Alfa Romeo"},
+			{"Scuderia AlphaTauri Honda", "AlphaTauri"},
+			{"Scuderia Ferrari", "Ferrari"},
+			{"Haas F1 Team", "Haas"},
+			{"{o:upper}M{/o}{o:lower}c{/o}{o:upper}L{/o}aren F1 Team", "McLaren"},
+			{"Mercedes-AMG Petronas F1 Team", "Mercedes"},
+			{"BWT Racing Point F1 Team" , "Racing Point"},
+			{"Aston Martin Red Bull Racing", "Red Bull"},
+			{"Renault DP World F1 Team", "Renault"},
+			{"Williams Racing", "Williams"}
+		};
+
+		public static Dictionary<string, string> teams_short = new Dictionary<string, string>() { // same as above, but for the short-team names used in-game leaderboard
+			{"Alfa Romeo", "Alfa Romeo"},
+			{"AlphaTauri", "AlphaTauri"},
+			{"Ferrari", "Ferrari" },
+			{"Haas", "Haas"},
+			{"{o:upper}M{/o}{o:lower}c{/o}{o:upper}L{/o}aren", "McLaren"},
+			{"Mercedes-AMG Petronas", "Mercedes"},
+			{"Racing Point", "Racing Point"},
+			{"Red Bull Racing", "Red Bull" },
+			{"Renault", "Renault"},
+			{"Williams", "Williams"}
+		};
+
+		public static Dictionary<string, string> teams_rev = teams.ToDictionary(x => x.Value, x => x.Key);
+		public static Dictionary<string, string> teams_short_rev = teams_short.ToDictionary(x => x.Value, x => x.Key);
 	}
 }
