@@ -20,6 +20,7 @@ namespace F1_2020_Names_Changer {
         static Dictionary<string, string> teamLookup_short = new Dictionary<string, string>();
 
         static IntPtr processHandle;
+        static Process process; // basically only so we can find if the game was closed or not
         static bool stopRunning = false;
 
         static Form1 gui = new Form1();
@@ -114,7 +115,7 @@ namespace F1_2020_Names_Changer {
                 log.Info("F1 Process detected, waiting 20 seconds or so for game to get ready");
                 System.Threading.Thread.Sleep(20000);
             }
-            Process process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
+            process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
             if (process.ProcessName=="F1_2020_dx12" && !skipOffsetLoading) {
                 log.Info("Detected as DX12 version, loading offsets");
                 Offsets.loadDX12();
@@ -185,7 +186,10 @@ namespace F1_2020_Names_Changer {
 				}
 			}
 
-            getF1Process(useCustomOffsets); // refind the process anyway - if the game has been restarted we won't have picked up the new process handle
+            if (process == null || (int)processHandle==0|| process.HasExited) {
+                getF1Process(useCustomOffsets); // refind the process anyway - if the game has been restarted we won't have picked up the new process handle
+                resetFoundOffsets();
+            }
             if ((int)processHandle == 0) {
                 log.Error("Failed to find process - was the process stopped?");
                 gui.Stopped(false);
@@ -1038,6 +1042,13 @@ namespace F1_2020_Names_Changer {
                 log.Warn("Failed to find one or more regions, this may cause some names and/or teams to be missed. Either try restarting the game and running \"Find Offsets\" again (In the Game menu), or disable custom offsets and use the default english offsets");
 			}
             gui.Finished();
+        }
+
+        static void resetFoundOffsets() {
+            int menuRegion1Offset = -1;
+            int menuRegion2Offset = -1;
+            int charRegionOffset = -1;
+            int ingameRegionOffset = -1;
         }
     }
     //the extension class must be declared as static
