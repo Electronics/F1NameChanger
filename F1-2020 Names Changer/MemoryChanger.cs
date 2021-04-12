@@ -923,16 +923,20 @@ namespace F1_2020_Names_Changer {
         }
 
 		public static void findOffsets() {
+            stopRunning = false;
 			getF1Process();
 			log.Info("Attempting to discover offsets... This might take a minute or so");
 			// read 5MB chunks at a time
 			byte[] buffer = new byte[5000000];
 			IntPtr bytesRead;
-			byte[] menu_search_bytearr = Encoding.UTF8.GetBytes("{o:mixed}Carlos"); // byte arrays constructed before loop for speed
-			byte[] menu2_search_bytearr = Encoding.UTF8.GetBytes("{o:mixed}Daniel{/o} {o:upper}RIC");
-			byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
+
+            // byte arrays constructed before loop for speed
+            byte[] menu_search_bytearr = new byte[] { 123, 111, 58, 109, 105, 120, 101, 100, 125, 67, 97, 114, 108, 111, 115, 123, 47, 111, 125, 32, 123, 111, 58, 117, 112, 112, 101, 114, 125, 83, 65, 73, 78, 90, 123, 47, 111, 125, 00, 00, 00, 00 }; // {o:mixed}Carlos{/o} {o:upper}SAINZ{/o}\0\0\0\0
+			byte[] menu2_search_bytearr = new byte[] { 0x7B, 0x6F, 0x3A, 0x6D, 0x69, 0x78, 0x65, 0x64, 0x7D, 0x44, 0x61, 0x6E, 0x69, 0x65, 0x6C, 0x7B, 0x2F, 0x6F, 0x7D, 0x20, 0x7B, 0x6F, 0x3A, 0x75, 0x70, 0x70, 0x65, 0x72, 0x7D, 0x52, 0x49, 0x43, 0x43, 0x49, 0x41, 0x52, 0x44, 0x4F, 0x7B, 0x2F, 0x6F, 0x7D, 0x00, 0x5D, 0x00 }; // {o:mixed}Daniel{/o} {o:upper}RICIARDO{/o}\0]\0
+            byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
             byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x08, 0x00, 0x00, 0x00}; // Carlos...... , used to be SAINZ....SAI as well, but needs regex
-            byte[] teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32, 0x2E, 0x35, 0x00, 0x47, 0x75, 0x65, 0x6E, 0x74, 0x68, 0x65, 0x72, 0x20, 0x53, 0x74, 0x65, 0x69, 0x6E, 0x65, 0x72, 0x00, 0x32, 0x37, 0x00, 0x4A, 0x61, 0x6D, 0x65, 0x73, 0x20, 0x4B, 0x65, 0x79, 0x00, 0x57, 0x69, 0x6C, 0x6C, 0x69, 0x61, 0x6D, 0x73, 0x00, 0x38, 0x00 }; // translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
+            byte[] teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32}; // now: Red Bull Racing\03052 due to language differences using different special characters?
+            // used to be: translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
             byte[] teams_search_menu_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D, 0x00, 0x43, 0x68, 0x61, 0x72, 0x6F, 0x75, 0x7A, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D };
             byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00 };
 
@@ -940,14 +944,14 @@ namespace F1_2020_Names_Changer {
             bool foundCharRegion = false; // our search string finds a lot of matches on this bit, we just want the first
             bool foundTeamsRegion = false;
             bool foundRacingPoint = false; // we only want the first one (in local language)
-            // rest of these are just for feedback to the user
             bool foundRacingPointGame = false;
+            // rest of these are just for feedback to the user
             bool foundGameRegion = false;
             bool foundMenuRegion1 = false;
             bool foundMenuRegion2 = false;
             // assuming 2GB? of RAM
             long i = 0;
-			while (i < 6e9) {
+			while (i < 6e9 && !stopRunning) {
 				ReadProcessMemory((IntPtr)processHandle, (IntPtr)((long)Offsets.SEARCH_START+i), buffer, buffer.Length, out bytesRead);
                 //log.Trace($"Read chunk {i} (0x{(long)Offsets.SEARCH_START+i:x}), read {bytesRead} bytes");
 
@@ -1002,11 +1006,13 @@ namespace F1_2020_Names_Changer {
                             foundRacingPoint = true;
                         }
                     }
-                    if ((foundOffset = Search(buffer, teams_search_game_racingPoint)) >= 0) {
-                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
-                        log.Fatal($"(Not actually fatal) Found the racing point game item: 0x{fullOffset:x}");
-                        Offsets.TEAMS_OFFSET_GAME_RACING_POINT = (IntPtr)fullOffset;
-                        foundRacingPointGame = true;
+                    if (!foundRacingPointGame) {
+                        if ((foundOffset = Search(buffer, teams_search_game_racingPoint)) >= 0) {
+                            long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                            log.Fatal($"(Not actually fatal) Found the racing point game item: 0x{fullOffset:x}");
+                            Offsets.TEAMS_OFFSET_GAME_RACING_POINT = (IntPtr)fullOffset;
+                            foundRacingPointGame = true;
+                        }
                     }
                 }
                  
@@ -1027,10 +1033,11 @@ namespace F1_2020_Names_Changer {
             log.Info($"Finished searching for offsets at {(long)Offsets.SEARCH_START + i:x}");
             Offsets.save();
             if (foundMenuRegion1&&foundMenuRegion2&&foundCharRegion&&foundGameRegion&&foundTeamsRegion&&foundRacingPoint&&foundRacingPointGame) {
-                log.Info("SUCCESS: Found all expected offsets (unless there was duplicates)");
+                log.Info("SUCCESS: Found all expected offsets (unless there were duplicates)");
 			} else {
                 log.Warn("Failed to find one or more regions, this may cause some names and/or teams to be missed. Either try restarting the game and running \"Find Offsets\" again (In the Game menu), or disable custom offsets and use the default english offsets");
 			}
+            gui.Finished();
         }
     }
     //the extension class must be declared as static

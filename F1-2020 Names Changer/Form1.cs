@@ -445,6 +445,7 @@ namespace F1_2020_Names_Changer {
 			Task.Run(() => MemoryChanger.findOffsets());
 			useCustomOffset.Checked = true;
 			haveShownCustomOffsetsPopup = true;
+			toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
 		}
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
 			bool bHandled = false;
