@@ -4,6 +4,8 @@ I wrote this rather than using cheat engine, as I felt the scripting tools avail
 
 Current stable version: https://github.com/Electronics/F1NameChanger/releases/tag/v2.1.1
 
+See [Issue #15](https://github.com/Electronics/F1NameChanger/issues/15) for latest on 1.18 game patch
+
 # Running
 
 Simply download the executable from the releases section. Run the application and you should get the main GUI of the program.
