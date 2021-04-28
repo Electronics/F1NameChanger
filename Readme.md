@@ -16,10 +16,11 @@ Double-click or File->Open files to open them in the editor on the right and sav
 
 To provide a differently named file as a lookup table, simply right click the file you want to use, and select `Set as Names lookup` or `Set as Teams lookup`. Once the files are correctly setup, simply click the `Write to F1` button. This can be done before or after starting the F1 game.
 Some example team and name lookup files can be found here as [names - example.txt](names%20-%20example.txt) and [teams - example.txt](teams%20-%20example.txt). [names.txt](names.txt) and [teams.txt](names.txt) contains all the original driver and team names so you don't need to lookup and type these in yourself.
-Currently the program looks for the DX12 version of the F1 2020 game, but this can be changed in the source code - or let me know that one is also required for DX11.
 Any issues or errors occured will show up in the log area at the bottom, accompanied with a red/green status of the section the error occurs in. Errors during regions writing to memory may cause subsequent runs of `Write to F1` to fail to identify memory regions. The game will need to be restarted in these cases.
 
 There is an `Undo Changes` button, but this is no substitute for restarting the game and is still an untested feature! The changes are only made to the game in memory (RAM) and as soon as the game is closed, all changes are lost and reset to default.
+
+Sometimes, espicially in different languages, the default memory offsets may not work, in this case restart the game and use "Game->Find Offsets". This should automatically find the offsets needed for your game, and will store them in an offsets.json file. This will then be used next time you run the tool.
 
 See known issues below on problems with longer names in-game.
 
@@ -35,6 +36,7 @@ The text files are the simplest way of configuring this tool as they are basical
 
 The text file can simply be opened as a csv or text file and consists of one driver per line (in no particular driver order): `old NAME, new NAME, newDriverTag`.
 The teams file similarly, is one team per line: `old team name, new team name, shortened in-game name`. 
+The `shortened in-game name` is the team name used in the leaderboards at the end of each session whereas the `new team name` is the name used in the main menus and character selection areas.
 See the example files for a list of old driver/team names.
 
 The names should always be formatted with the first name having the first letter capitalised and the rest lower case, and for the last name: always upper case. e.g. `Carlos SAINZ` would be correct, `carlos Sainz` would be wrong. This mostly only causes issues with the undo feature, so don't worry too much.
@@ -57,7 +59,7 @@ All driver names should be in the format mixed-case first name ("Carlos"), upper
 
 - Due to how the ingame-names are stored, depending on the original length of the name (lastname usually as it shows up in the sidebar), the new name can be truncated by the game to the original name's length. As far as I can tell, this can't be easily fixed in any way (see [Reverse Engineering](Reverse%20Engineering/Reverse%20Engineering.md)) for more details on this
 - Lastnames of 3 characters might cause issues being incorrectly identified as driver tags, I don't think this is an issue unless this tool is run multiple times in sucession, or in future the game adds additional drivers with these properties
-- Audio prompts from Jeff, subtitles and retirements will still show the old driver names. I am working on the text bits, but the audio from Jeff will likely not be able to be changed.
+- Audio prompts from Jeff, subtitles, retirements and flags will still show the old driver names. I am working on the text bits, but the audio from Jeff will likely not be able to be changed.
 - Lookups for 3 letter driver tags need to be completed for F2 and other drivers
 
 For other issues, check the Issues tab here in github, and if you can't find anyone else with the same issue, post about it! The program automatically generates a log file that should be in the same directory. If you know C# and can figure out my spaghetti code you could even try to fix it yourself!

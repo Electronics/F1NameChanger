@@ -18,6 +18,7 @@ namespace F1_2020_Names_Changer {
 		public string teamsLookupFile;
 
 		bool willLooseChanges = false;
+		bool haveShownCustomOffsetsPopup = false;
 
 		public Form1() {
 			Application.EnableVisualStyles(); // enable the scrolling marquee
@@ -85,7 +86,19 @@ namespace F1_2020_Names_Changer {
 
 		private void start() {
 			resetIndicators();
-			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile));
+
+			// if we find an offsets file from a previous run (hopefully sucessful...) ask the user whether we should use it
+			if (File.Exists("offsets.json")) {
+				if (!haveShownCustomOffsetsPopup) {
+					DialogResult dialogResult = MessageBox.Show("A custom offset file has been detected (likely generated from a previous run). Would you like to use the custom offsets?", "Use Custom Offsets?", MessageBoxButtons.YesNoCancel);
+					if (dialogResult == DialogResult.Cancel) return;
+					else if(dialogResult == DialogResult.Yes) {
+						useCustomOffset.Checked = true;
+					}
+					haveShownCustomOffsetsPopup = true;
+				}
+			}
+			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile, false, useCustomOffset.Checked));
 			toolStripButtonWriteF1.Enabled = false;
 			writeToF1ToolStripMenuItem.Enabled = false;
 			undoChangesToolStripMenuItem.Enabled = false;
@@ -109,13 +122,18 @@ namespace F1_2020_Names_Changer {
 			}));
 		}
 
-		public void Finished() {
+		public void Finished(bool tryFindOffsets = false) {
 			if (toolStrip1.InvokeRequired) toolStrip1.Invoke(new MethodInvoker(delegate {
 				undoChangesToolStripMenuItem.Enabled = true; // call this from the ui thread (via the toolstrip because why not)
 				toolStripButtonUndo.Enabled = true;
 				toolStripButtonWriteF1.Enabled = true;
 				writeToF1ToolStripMenuItem.Enabled = true;
 				toolStripProgressBar1.Style = ProgressBarStyle.Blocks;
+
+
+				if (tryFindOffsets) {
+					DialogResult dialogResult = MessageBox.Show("It looks like some areas of memory were not found properly. Consider trying \"Game->Find Offsets\" to find customised offsets for your game and then re-run.\n NB: \"Find Offsets\" should be done on a fresh-restart of the game (where no memory changing has taken place), otherwise it may fail!", "Custom Offsets", MessageBoxButtons.OK);
+				}
 			}));
 		}
 
@@ -179,7 +197,7 @@ namespace F1_2020_Names_Changer {
 				return;
 			}
 			resetIndicators();
-			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile, true));
+			Task.Run(() => MemoryChanger.run(namesLookupFile, teamsLookupFile, true, useCustomOffset.Checked));
 			toolStripButtonWriteF1.Enabled = false;
 			writeToF1ToolStripMenuItem.Enabled = false;
 			undoChangesToolStripMenuItem.Enabled = false;
@@ -317,6 +335,7 @@ namespace F1_2020_Names_Changer {
 				fd.Font = editorBox.Font;
 				if (fd.ShowDialog() == DialogResult.OK) {
 					editorBox.Font = fd.Font;
+					logBox.Font = fd.Font;
 				}
 			}
 		}
@@ -402,7 +421,8 @@ namespace F1_2020_Names_Changer {
 		}
 
 		private void copyToolStripMenuItem_Click(object sender, EventArgs e) {
-			editorBox.Copy();
+			if (editorBox.Focused) editorBox.Copy();
+			if (logBox.Focused) logBox.Copy();
 		}
 
 		private void pasteToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -419,6 +439,25 @@ namespace F1_2020_Names_Changer {
 
 		private void redoToolStripMenuItem_Click(object sender, EventArgs e) {
 			editorBox.Redo();
+		}
+
+		private void findOffsetsToolStripMenuItem_Click(object sender, EventArgs e) {
+			Task.Run(() => MemoryChanger.findOffsets());
+			useCustomOffset.Checked = true;
+			haveShownCustomOffsetsPopup = true;
+			toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
+		}
+		protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+			bool bHandled = false;
+			switch (keyData) {
+				case Keys.F5:
+					if (treeView1.Focused) {
+						updateTree();
+					}
+					bHandled = true;
+					break;
+			}
+			return bHandled;
 		}
 	}
 }

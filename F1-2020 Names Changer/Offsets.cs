@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,11 +7,15 @@ using System.Threading.Tasks;
 
 namespace F1_2020_Names_Changer {
 	static class Offsets {
-        // these are addresses at which this program will start to search for the below search strings to identify the where the actual start of the region is
-        public static IntPtr MENU_OFFSET_START;
+
+		public static IntPtr SEARCH_START = (IntPtr)0x190000000; // used for searching for below offsets if they don't work
+
+		// these are addresses at which this program will start to search for the below search strings to identify the where the actual start of the region is
+		public static IntPtr MENU_OFFSET_START;
         public static IntPtr MENU2_OFFSET_START;
         public static IntPtr CHARSELECTION_OFFSET_START;
         public static IntPtr INGAME_OFFSET_START;
+        public static IntPtr TEAMS_OFFSET_START; // NB: doesn't include racing point
 
         // teams offset separately stated as there doesn't seem to be much order to how they're organised. Plus the memory locations are static
         public static IntPtr TEAMS_OFFSET_MENU_RACING_POINT;
@@ -34,6 +39,33 @@ namespace F1_2020_Names_Changer {
         public static IntPtr TEAMS_OFFSET_GAME_WILLIAMS;
         public static IntPtr TEAMS_OFFSET_GAME_HAAS;
         public static IntPtr TEAMS_OFFSET_GAME_MCLAREN;
+
+        public static void save() {
+            Dictionary<string, IntPtr> data = new Dictionary<string, IntPtr>() {
+                { "menuOffset", MENU_OFFSET_START },
+                { "menuOffset2", MENU2_OFFSET_START },
+                { "charOffset", CHARSELECTION_OFFSET_START },
+                {"gameOffset", INGAME_OFFSET_START },
+                {"teamsOffset", TEAMS_OFFSET_START },
+                {"racingPointMenu", TEAMS_OFFSET_MENU_RACING_POINT },
+                {"racingPointGame", TEAMS_OFFSET_GAME_RACING_POINT }
+            };
+            string json = JsonConvert.SerializeObject(data);
+            System.IO.File.WriteAllText(@"offsets.json", json);
+        }
+
+        public static bool load() {
+            string jsonStr = System.IO.File.ReadAllText(@"offsets.json");
+            dynamic json = JsonConvert.DeserializeObject(jsonStr);
+            MENU_OFFSET_START = (IntPtr)(long)json.menuOffset.value;
+            MENU2_OFFSET_START = (IntPtr)(long)json.menuOffset2.value;
+            CHARSELECTION_OFFSET_START = (IntPtr)(long)json.charOffset.value;
+            INGAME_OFFSET_START = (IntPtr)(long)json.gameOffset.value;
+            TEAMS_OFFSET_START = (IntPtr)(long)json.teamsOffset.value;
+            TEAMS_OFFSET_MENU_RACING_POINT = (IntPtr)(long)json.racingPointMenu.value;
+            TEAMS_OFFSET_GAME_RACING_POINT = (IntPtr)(long)json.racingPointGame.value;
+            return true;
+        }
 
         public static void loadDX12() {
             MENU_OFFSET_START = (IntPtr)0x2b1d12500;
@@ -60,6 +92,7 @@ namespace F1_2020_Names_Changer {
             TEAMS_OFFSET_GAME_WILLIAMS = (IntPtr)0x194350ab5;
             TEAMS_OFFSET_GAME_HAAS = (IntPtr)0x194350b09;
             TEAMS_OFFSET_GAME_MCLAREN = (IntPtr)0x194351273;
+            TEAMS_OFFSET_START = TEAMS_OFFSET_GAME_RED_BULL;
         }
 
         public static void loadDX11() {
@@ -87,6 +120,7 @@ namespace F1_2020_Names_Changer {
             TEAMS_OFFSET_GAME_WILLIAMS = (IntPtr)0x193a10ab5;
             TEAMS_OFFSET_GAME_HAAS = (IntPtr)0x193a10b09;
             TEAMS_OFFSET_GAME_MCLAREN = (IntPtr)0x193a11273;
+            TEAMS_OFFSET_START = TEAMS_OFFSET_GAME_RED_BULL;
         }
     }
 }

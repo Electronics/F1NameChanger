@@ -20,6 +20,7 @@ namespace F1_2020_Names_Changer {
         static Dictionary<string, string> teamLookup_short = new Dictionary<string, string>();
 
         static IntPtr processHandle;
+        static Process process; // basically only so we can find if the game was closed or not
         static bool stopRunning = false;
 
         static Form1 gui = new Form1();
@@ -102,7 +103,7 @@ namespace F1_2020_Names_Changer {
             stopRunning = true;
 		}
 
-        public static void getF1Process() {
+        public static void getF1Process(bool skipOffsetLoading=false) {
             stopRunning = false;
             if (Process.GetProcesses().Where(x=> x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
                 log.Info("F1 Process not detected, waiting for game to be started");
@@ -114,12 +115,12 @@ namespace F1_2020_Names_Changer {
                 log.Info("F1 Process detected, waiting 20 seconds or so for game to get ready");
                 System.Threading.Thread.Sleep(20000);
             }
-            Process process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
-            if (process.ProcessName=="F1_2020_dx12") {
+            process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
+            if (process.ProcessName=="F1_2020_dx12" && !skipOffsetLoading) {
                 log.Info("Detected as DX12 version, loading offsets");
                 Offsets.loadDX12();
 			}
-            if (process.ProcessName=="F1_2020") {
+            if (process.ProcessName== "F1_2020" && !skipOffsetLoading) {
                 log.Info("Detected as DX11 version, loading offsets");
                 Offsets.loadDX11();
 			}
@@ -127,8 +128,9 @@ namespace F1_2020_Names_Changer {
             log.Info("F1 Process detected");
         }
 
-        public static void run(string nameLookupFile, string teamLookupFile, bool reversed=false) {
+        public static void run(string nameLookupFile, string teamLookupFile, bool reversed=false, bool useCustomOffsets=false) {
             stopRunning = false;
+            bool missingRegions = false; // used to indicate whether we should ask the user to try finding custom offsets instead
             log.Info("Memory Changer started");
             log.Debug($"With Name lookup file: {nameLookupFile}\n and team lookup file: {teamLookupFile}");
 
@@ -147,8 +149,8 @@ namespace F1_2020_Names_Changer {
                 try {
                     nameLookup = nameLookup.ToDictionary(x => x.Value, x => x.Key);
                     nameLookup_short = nameLookup_short.ToDictionary(x => x.Value, x => x.Key);
-                    teamLookup = teamLookup.ToDictionary(x => x.Key, x => x.Key);
-                    teamLookup_short = teamLookup_short.ToDictionary(x => x.Key, x => x.Key);
+                    teamLookup = teamLookup.ToDictionary(x => x.Value, x => x.Key);
+                    teamLookup_short = teamLookup_short.ToDictionary(x => x.Value, x => x.Key);
 
                     gui.Update("lookups", 1); // green indicator
                 } catch(System.ArgumentException) {
@@ -176,7 +178,18 @@ namespace F1_2020_Names_Changer {
                 }
             }
 
-            getF1Process(); // refind the process anyway - if the game has been restarted we won't have picked up the new process handle
+            if (useCustomOffsets) {
+                log.Info("Using custom offsets");
+                if (!Offsets.load()) {
+                    useCustomOffsets = false;
+                    log.Warn("Using default offsets instead");
+				}
+			}
+
+            if (process == null || (int)processHandle==0|| process.HasExited) {
+                getF1Process(useCustomOffsets); // refind the process anyway - if the game has been restarted we won't have picked up the new process handle
+                resetFoundOffsets();
+            }
             if ((int)processHandle == 0) {
                 log.Error("Failed to find process - was the process stopped?");
                 gui.Stopped(false);
@@ -189,7 +202,7 @@ namespace F1_2020_Names_Changer {
             IntPtr bytesRead = IntPtr.Zero;
             byte[] buffer = new byte[32000];
             ReadProcessMemory((IntPtr)processHandle, Offsets.MENU_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.MENU_OFFSET_START:X}(Menu Region 1)");
+            log.Debug($"Read {bytesRead} bytes of RAM at {(long)Offsets.MENU_OFFSET_START:x}(Menu Region 1)");
 
 
             //temppppp
@@ -203,6 +216,7 @@ namespace F1_2020_Names_Changer {
             if (menuRegion1Offset < 0) {
                 log.Error("Failed to find Menu Region 1");
                 gui.Update("region1", 0); // red indicator
+                missingRegions = true;
             } else {
                 log.Debug($"Found Menu Memory Region 1 Offset: {menuRegion1Offset}");
                 
@@ -214,7 +228,7 @@ namespace F1_2020_Names_Changer {
                 log.Debug("Writing new menu memory region 1 to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
                 WriteProcessMemory((IntPtr)processHandle, Offsets.MENU_OFFSET_START + menuRegion1Offset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.MENU_OFFSET_START + menuRegion1Offset:X}(Menu Region 1)");
+                log.Debug($"Written {bytesWritten} bytes to RAM at {(long)(Offsets.MENU_OFFSET_START + menuRegion1Offset):x}(Menu Region 1)");
                 log.Info($"Sucesfully written to Menu Region 1");
             }
 
@@ -224,7 +238,7 @@ namespace F1_2020_Names_Changer {
 
 
             ReadProcessMemory((IntPtr)processHandle, Offsets.MENU2_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.MENU2_OFFSET_START:X}(Menu Region 2)");
+            log.Debug($"Read {bytesRead} bytes of RAM at {(long)Offsets.MENU2_OFFSET_START:x}(Menu Region 2)");
 
 
             //temppppp
@@ -239,7 +253,7 @@ namespace F1_2020_Names_Changer {
             if (menuRegion2Offset < 0) {
                 log.Error("Failed to find Menu Region 2");
                 gui.Update("region2", 0); // red indicator
-
+                missingRegions = true;
             } else {
                 log.Debug($"Found Menu Memory Region 2 Offset: {menuRegion2Offset}");
 
@@ -251,7 +265,7 @@ namespace F1_2020_Names_Changer {
                 log.Debug("Writing new menu memory region 2 to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
                 WriteProcessMemory((IntPtr)processHandle, Offsets.MENU2_OFFSET_START + menuRegion2Offset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.MENU2_OFFSET_START + menuRegion2Offset:X}(Menu Region 2)");
+                log.Debug($"Written {bytesWritten} bytes to RAM at {(long)(Offsets.MENU2_OFFSET_START + menuRegion2Offset):x}(Menu Region 2)");
                 log.Info($"Sucesfully written to Menu Region 2");
             }
 
@@ -263,7 +277,7 @@ namespace F1_2020_Names_Changer {
 
 
             ReadProcessMemory((IntPtr)processHandle, Offsets.CHARSELECTION_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.CHARSELECTION_OFFSET_START:X}(Character Selection Region)");
+            log.Debug($"Read {bytesRead} bytes of RAM at {(long)Offsets.CHARSELECTION_OFFSET_START:x}(Character Selection Region)");
 
 
             //temppppp
@@ -277,6 +291,7 @@ namespace F1_2020_Names_Changer {
             if (charRegionOffset < 0) {
                 log.Error("Failed to find Character Selection Region");
                 gui.Update("charRegion", 0); //red indicator
+                missingRegions = true;
             } else {
                 log.Debug($"Found Character Selection Region: {charRegionOffset}");
 
@@ -288,7 +303,7 @@ namespace F1_2020_Names_Changer {
                 log.Debug("Writing new Character Selection Region to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
                 WriteProcessMemory((IntPtr)processHandle, Offsets.CHARSELECTION_OFFSET_START + charRegionOffset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.CHARSELECTION_OFFSET_START + charRegionOffset:X}(Character Selection Region)");
+                log.Debug($"Written {bytesWritten} bytes to RAM at {(long)(Offsets.CHARSELECTION_OFFSET_START + charRegionOffset):x}(Character Selection Region)");
                 log.Info($"Sucesfully written to Character Selection Region");
             }
 
@@ -299,7 +314,7 @@ namespace F1_2020_Names_Changer {
 
 
             ReadProcessMemory((IntPtr)processHandle, Offsets.INGAME_OFFSET_START, buffer, buffer.Length, out bytesRead);
-            log.Debug($"Read {bytesRead} bytes of RAM at {Offsets.INGAME_OFFSET_START:X}(Game region)");
+            log.Debug($"Read {bytesRead} bytes of RAM at {(long)Offsets.INGAME_OFFSET_START:x}(Game region)");
 
 
             //temppppp
@@ -313,6 +328,7 @@ namespace F1_2020_Names_Changer {
             if (ingameRegionOffset < 0) {
                 log.Error("Failed to find Game region");
                 gui.Update("gameRegion", 0); // red indicator
+                missingRegions = true;
             } else {
                 log.Debug($"Found Game region: {ingameRegionOffset}");
 
@@ -324,18 +340,29 @@ namespace F1_2020_Names_Changer {
                 log.Debug("Writing new Game region to RAM...");
                 IntPtr bytesWritten = IntPtr.Zero;
                 WriteProcessMemory((IntPtr)processHandle, Offsets.INGAME_OFFSET_START + ingameRegionOffset, memOut, memOut.Length, out bytesWritten);
-                log.Debug($"Written {bytesWritten} bytes to RAM at {Offsets.INGAME_OFFSET_START + ingameRegionOffset:X}(Game region)");
+                log.Debug($"Written {bytesWritten} bytes to RAM at {(long)(Offsets.INGAME_OFFSET_START + ingameRegionOffset):x}(Game region)");
             }
 
             // --------------------- Now finally teams ----------------------------------------
             if (teamLookup.Count > 0) {
-                writeTeamNames(processHandle);
+				log.Info("Editing Teams...");
+
+
+				ReadProcessMemory((IntPtr)processHandle, Offsets.TEAMS_OFFSET_START, buffer, buffer.Length, out bytesRead);
+				log.Debug($"Read {bytesRead} bytes of RAM at {(long)Offsets.TEAMS_OFFSET_START:x}(Team region)");
+
+                if ((int)bytesRead > 0) gui.Update("teamRegion", 1); // green indicator
+                else {
+                    gui.Update("teamRegion", 0); // red indicator
+                    missingRegions = true;
+                }
+                writeTeamNames(processHandle, buffer, reversed);
             } else {
                 log.Warn("Skipping team names as missing team lookups");
             }
 
             log.Info("Done!");
-            gui.Finished();
+            gui.Finished(missingRegions);
         }
         static int Search(byte[] src, byte[] pattern, int offset=0) {
             int c = src.Length - pattern.Length + 1;
@@ -369,30 +396,35 @@ namespace F1_2020_Names_Changer {
                 // maybe see if it's a perfect 2-name, mixed, upper case thing then pass it?
                 String firstName;
                 String lastName;
-                if (tempSplit.Length <= 1) {
-                    // double check it's not a name still by looking for "Mixed UPPER"
-                    var split = oldDriver.Split(" ");
-                    if (split.Length == 2) {
-                        if (IsAllUpper(split[1]) && split[0].Count(ch=>char.IsUpper(ch))==1) {
-                            firstName = split[0];
-                            lastName = split[1];
+                try {
+                    if (tempSplit.Length <= 1) {
+                        // double check it's not a name still by looking for "Mixed UPPER"
+                        var split = oldDriver.Split(" ");
+                        if (split.Length == 2) {
+                            if (IsAllUpper(split[1]) && split[0].Count(ch => char.IsUpper(ch)) == 1) {
+                                firstName = split[0];
+                                lastName = split[1];
+                            } else {
+                                goto SKIP;
+                            }
                         } else {
                             goto SKIP;
-						}
+                        }
                     } else {
-                        goto SKIP;
+                        oldDriver = tempSplit[1];
+                        var nameSplit = oldDriver.Split("{/o}");
+                        firstName = nameSplit[0];
+                        lastName = nameSplit[1].Split(@"{o:upper}")[1];
                     }
-                } else {
-                    oldDriver = tempSplit[1];
-                    var nameSplit = oldDriver.Split("{/o}");
-                    firstName = nameSplit[0];
-                    lastName = nameSplit[1].Split(@"{o:upper}")[1];
-                }
+                } catch(IndexOutOfRangeException) {
+                    log.Error($"PARSEMENU: Index out of range exception: probably just some random text that looked like a name? \"{oldDriver}\"");
+                    goto SKIP;
+				}
 
                 log.Debug($"PARSEMENU: Found memory region for {firstName} {lastName}", ConsoleColor.Cyan);
 
                 // we can now lookup the name in a lookup table and replace it
-                var rName = lookupName(firstName, lastName);
+                var rName = lookupName(firstName, lastName, true);
 
                 if (!String.IsNullOrEmpty(rName)) {
                     String newName = generateMenuName(rName.Split(" ")[0], rName.Split(" ")[1], nameSize); // add the new menu item
@@ -596,40 +628,86 @@ namespace F1_2020_Names_Changer {
             return buffer.Take(regionSize).ToArray();
 		}
 
-        static void writeTeamNames(IntPtr processHandle) {
+        static void writeTeamNames(IntPtr processHandle, byte[] buffer, bool reversed=false) {
             // from what I can tell, it doesn't matter how long the string is as long as it's null terminated ( we will overwrite some other stuff somewhere in the menu system, but whatever)
             // also, these are spread out a lot in memory, so better to 'punch' in and out directly, rather than reading and writing like 437k of memory
-            void tryCopyName(string oldName, IntPtr ptr, Dictionary<string,string> dict) {
+            // ^ above comment was about deprecated code, but still maintaining this ethos due to the racing point team being in a far region of memory compared to the rest
+            bool tryCopyName(string oldName, long ptr, Dictionary<string,string> dict) {
                 if(dict.ContainsKey(oldName)) {
                     byte[] newName_bytes = Encoding.UTF8.GetBytes(dict[oldName]+"\0");
                     IntPtr bytesWritten;
-                    WriteProcessMemory((IntPtr)processHandle, ptr, newName_bytes, newName_bytes.Length, out bytesWritten);
-                    log.Debug($"\t{oldName}->{dict[oldName]} written successfully");
+                    WriteProcessMemory((IntPtr)processHandle, (IntPtr)ptr, newName_bytes, newName_bytes.Length, out bytesWritten);
+                    log.Debug($"\t{oldName}->{dict[oldName]} written successfully at 0x{ptr:x}");
+                    return true;
                 } else {
                     log.Trace($"\t{oldName} not found in teams lookup, skipping");
+                    return false;
 				}
 			}
 
-            tryCopyName("Racing Point", Offsets.TEAMS_OFFSET_GAME_RACING_POINT, teamLookup_short);
-            tryCopyName("Racing Point", Offsets.TEAMS_OFFSET_MENU_RACING_POINT, teamLookup);
-            tryCopyName("Mercedes", Offsets.TEAMS_OFFSET_GAME_MERCEDES, teamLookup_short);
-            tryCopyName("Mercedes", Offsets.TEAMS_OFFSET_MENU_MERCEDES, teamLookup);
-            tryCopyName("Ferrari", Offsets.TEAMS_OFFSET_GAME_FERRARI, teamLookup_short);
-            tryCopyName("Ferrari", Offsets.TEAMS_OFFSET_MENU_FERRARI, teamLookup);
-            tryCopyName("Red Bull", Offsets.TEAMS_OFFSET_GAME_RED_BULL, teamLookup_short);
-            tryCopyName("Red Bull", Offsets.TEAMS_OFFSET_MENU_RED_BULL, teamLookup);
-            tryCopyName("AlphaTauri", Offsets.TEAMS_OFFSET_GAME_ALPHA_TAURI, teamLookup_short);
-            tryCopyName("AlphaTauri", Offsets.TEAMS_OFFSET_MENU_ALPHA_TAURI, teamLookup);
-            tryCopyName("Renault", Offsets.TEAMS_OFFSET_GAME_RENAULT, teamLookup_short);
-            tryCopyName("Renault", Offsets.TEAMS_OFFSET_MENU_RENAULT, teamLookup);
-            tryCopyName("Alfa Romeo", Offsets.TEAMS_OFFSET_GAME_ALFA_ROMEO, teamLookup_short);
-            tryCopyName("Alfa Romeo", Offsets.TEAMS_OFFSET_MENU_ALFA_ROMEO, teamLookup);
-            tryCopyName("Williams", Offsets.TEAMS_OFFSET_GAME_WILLIAMS, teamLookup_short);
-            tryCopyName("Williams", Offsets.TEAMS_OFFSET_MENU_WILLIAMS, teamLookup);
-            tryCopyName("Haas", Offsets.TEAMS_OFFSET_GAME_HAAS, teamLookup_short);
-            tryCopyName("Haas", Offsets.TEAMS_OFFSET_MENU_HAAS, teamLookup);
-            tryCopyName("McLaren", Offsets.TEAMS_OFFSET_GAME_MCLAREN, teamLookup_short);
-            tryCopyName("McLaren", Offsets.TEAMS_OFFSET_MENU_MCLAREN, teamLookup);
+            List<int> foundTeams = new List<int>(); // keep a note of where we've already changed the longer names, we don't want to overwrite with shorter
+            if (reversed) {
+                foreach (var team in teamLookup) {
+                    int ptr = 0;
+                    while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(team.Key), ptr)) >= 0) {
+                        log.Trace($"Found {team.Key}");
+                        if (tryCopyName(team.Value, ptr + (long)Offsets.TEAMS_OFFSET_START, Lookups.teams_rev)) {
+                            foundTeams.Add(ptr);
+                        }
+                        ptr += 10;
+                    }
+                }
+
+                // now in-game shorter names
+                foreach (var team in teamLookup_short) {
+                    int ptr = 0;
+                    while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(team.Key), ptr)) >= 0) {
+                        log.Trace($"Found {team.Key}");
+                        if (containsNumberInRange(foundTeams, ptr - 16, ptr)) {
+                            log.Trace("Found team we've already replaced, skipping");
+                            ptr += 10; // move on
+                            continue; // don't change a name we've already done
+                        }
+                        tryCopyName(team.Value, ptr + (long)Offsets.TEAMS_OFFSET_START, Lookups.teams_short_rev);
+                        ptr += 10;
+                    }
+                }
+                // finally write the racing point bits as they're in a different memory region
+                tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_MENU_RACING_POINT, Lookups.teams_rev);
+                tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_GAME_RACING_POINT, Lookups.teams_short_rev);
+            } else {
+                // start in the main menu 
+                foreach (var team in Lookups.teams) {
+                    int ptr = 0;
+                    while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(team.Key), ptr)) >= 0) {
+                        log.Trace($"Found {team.Key}");
+                        if (tryCopyName(team.Value, ptr + (long)Offsets.TEAMS_OFFSET_START, teamLookup)) {
+                            foundTeams.Add(ptr);
+						}
+                        ptr += 10;
+                    }
+                }
+
+                // now in-game shorter names
+                foreach (var team in Lookups.teams_short) {
+                    int ptr = 0;
+                    while ((ptr = Search(buffer, Encoding.UTF8.GetBytes(team.Key), ptr)) >= 0) {
+                        log.Trace($"Found {team.Key}");
+                        if (containsNumberInRange(foundTeams, ptr - 16, ptr)) {
+                            log.Trace("Found team we've already replaced, skipping");
+                            ptr += 10; // move on
+                            continue; // don't change a name we've already done
+                        }
+                        tryCopyName(team.Value, ptr + (long)Offsets.TEAMS_OFFSET_START, teamLookup_short);
+                        ptr += 10;
+                    }
+                }
+                // finally write the racing point bits as they're in a different memory region
+                tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_MENU_RACING_POINT, teamLookup);
+                tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_GAME_RACING_POINT, teamLookup_short);
+            }
+
+            
         }
 
 
@@ -649,7 +727,7 @@ namespace F1_2020_Names_Changer {
             return false;
 		}
 
-        static String lookupName(String firstname, String lastname) {
+        static String lookupName(String firstname, String lastname, bool skipSingleNameLookup = false) {
             // firstname is expected to be mixed case (first upper), lastname is all upper case
             String newName = "";
             if (nameLookup.TryGetValue($"{firstname} {lastname}", out newName)) {
@@ -672,6 +750,10 @@ namespace F1_2020_Names_Changer {
                     log.Warn($"LOOKUP: Key error in looking up reversed name");
                     return null;
 				}
+            }
+            if (skipSingleNameLookup) {
+                log.Trace("LOOKUP: Skipping single name lookup");
+                return null;
             }
             // try firstnames?
 
@@ -842,6 +924,131 @@ namespace F1_2020_Names_Changer {
                 return 0;
 			}
             return 1;
+        }
+
+		public static void findOffsets() {
+            stopRunning = false;
+			getF1Process();
+			log.Info("Attempting to discover offsets... This might take a minute or so");
+			// read 5MB chunks at a time
+			byte[] buffer = new byte[5000000];
+			IntPtr bytesRead;
+
+            // byte arrays constructed before loop for speed
+            byte[] menu_search_bytearr = new byte[] { 123, 111, 58, 109, 105, 120, 101, 100, 125, 67, 97, 114, 108, 111, 115, 123, 47, 111, 125, 32, 123, 111, 58, 117, 112, 112, 101, 114, 125, 83, 65, 73, 78, 90, 123, 47, 111, 125, 00, 00, 00, 00 }; // {o:mixed}Carlos{/o} {o:upper}SAINZ{/o}\0\0\0\0
+			byte[] menu2_search_bytearr = new byte[] { 0x7B, 0x6F, 0x3A, 0x6D, 0x69, 0x78, 0x65, 0x64, 0x7D, 0x44, 0x61, 0x6E, 0x69, 0x65, 0x6C, 0x7B, 0x2F, 0x6F, 0x7D, 0x20, 0x7B, 0x6F, 0x3A, 0x75, 0x70, 0x70, 0x65, 0x72, 0x7D, 0x52, 0x49, 0x43, 0x43, 0x49, 0x41, 0x52, 0x44, 0x4F, 0x7B, 0x2F, 0x6F, 0x7D, 0x00, 0x5D, 0x00 }; // {o:mixed}Daniel{/o} {o:upper}RICIARDO{/o}\0]\0
+            byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
+            byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x08, 0x00, 0x00, 0x00}; // Carlos...... , used to be SAINZ....SAI as well, but needs regex
+            byte[] teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32}; // now: Red Bull Racing\03052 due to language differences using different special characters?
+            // used to be: translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
+            byte[] teams_search_menu_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D, 0x00, 0x43, 0x68, 0x61, 0x72, 0x6F, 0x75, 0x7A, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D };
+            byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00 };
+
+
+            bool foundCharRegion = false; // our search string finds a lot of matches on this bit, we just want the first
+            bool foundTeamsRegion = false;
+            bool foundRacingPoint = false; // we only want the first one (in local language)
+            bool foundRacingPointGame = false;
+            // rest of these are just for feedback to the user
+            bool foundGameRegion = false;
+            bool foundMenuRegion1 = false;
+            bool foundMenuRegion2 = false;
+            // assuming 2GB? of RAM
+            long i = 0;
+			while (i < 6e9 && !stopRunning) {
+				ReadProcessMemory((IntPtr)processHandle, (IntPtr)((long)Offsets.SEARCH_START+i), buffer, buffer.Length, out bytesRead);
+                //log.Trace($"Read chunk {i} (0x{(long)Offsets.SEARCH_START+i:x}), read {bytesRead} bytes");
+
+                if (bytesRead==(IntPtr)0) {
+                    i += 50000; // only skip forward a small amount - we can miss sections otherwise
+                    //TODO: possibly change this for a search backwards if we've just skipped past a section we can't read?
+                    continue;
+				}
+
+				// we need to search for 4 important offsets + the teams
+				int foundOffset;
+				if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
+                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    log.Fatal($"(Not actually fatal) Found menu region 1: 0x{fullOffset:x}");
+                    Offsets.MENU_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                    foundMenuRegion1 = true;
+				}
+
+                if ((foundOffset = Search(buffer, menu2_search_bytearr)) >= 0) {
+                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    log.Fatal($"(Not actually fatal) Found menu region 2: 0x{fullOffset:x}");
+                    Offsets.MENU2_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                    foundMenuRegion2 = true;
+                }
+                if (!foundCharRegion) { // only find the first instance
+                    if ((foundOffset = Search(buffer, char_search_bytearr)) >= 0) {
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"(Not actually fatal) Found character region: 0x{fullOffset:x}");
+                        Offsets.CHARSELECTION_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                        foundCharRegion = true;
+                    }
+                }
+                if ((foundOffset = Search(buffer, game_search_bytearr)) >= 0) {
+                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    log.Fatal($"(Not actually fatal) Found in-game region: 0x{fullOffset:x}");
+                    Offsets.INGAME_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                    foundGameRegion = true;
+                }
+                if (!foundTeamsRegion) { // skip this slow bit after we've found it
+                    if ((foundOffset = Search(buffer, teams_search_bytearr)) >= 0) {
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"(Not actually fatal) Found the start of the main teams region: 0x{fullOffset:x}");
+                        Offsets.TEAMS_OFFSET_START = (IntPtr)fullOffset - 0xb00;
+                        foundTeamsRegion = true;
+                    }
+                    // the following racing point items are in a different location, before the main section
+                    if (!foundRacingPoint) {
+                        if ((foundOffset = Search(buffer, teams_search_menu_racingPoint)) >= 0) {
+                            long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                            log.Fatal($"(Not actually fatal) Found the racing point menu item: 0x{fullOffset:x}");
+                            Offsets.TEAMS_OFFSET_MENU_RACING_POINT = (IntPtr)fullOffset;
+                            foundRacingPoint = true;
+                        }
+                    }
+                    if (!foundRacingPointGame) {
+                        if ((foundOffset = Search(buffer, teams_search_game_racingPoint)) >= 0) {
+                            long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                            log.Fatal($"(Not actually fatal) Found the racing point game item: 0x{fullOffset:x}");
+                            Offsets.TEAMS_OFFSET_GAME_RACING_POINT = (IntPtr)fullOffset;
+                            foundRacingPointGame = true;
+                        }
+                    }
+                }
+                 
+                //Teams detection, always early on
+                /*if ((long)Offsets.SEARCH_START + i < 0x195000000) {
+                    // convert to a string with special encoding so that weird (128/256) value bytes aren't changed in length, and then search with regex
+                    string encodedBuffer = Encoding.GetEncoding(437).GetString(buffer);
+                    Match m = mainTeamRegionSearch.Match(encodedBuffer);
+                    if (m.Success) {
+                        foundOffset = m.Index;
+                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        log.Fatal($"Found the start of the main teams region: 0x{fullOffset:x}");
+                    }
+				}*/
+
+                i += buffer.Length;
+            }
+            log.Info($"Finished searching for offsets at {(long)Offsets.SEARCH_START + i:x}");
+            Offsets.save();
+            if (foundMenuRegion1&&foundMenuRegion2&&foundCharRegion&&foundGameRegion&&foundTeamsRegion&&foundRacingPoint&&foundRacingPointGame) {
+                log.Info("SUCCESS: Found all expected offsets (unless there were duplicates)");
+			} else {
+                log.Warn("Failed to find one or more regions, this may cause some names and/or teams to be missed. Either try restarting the game and running \"Find Offsets\" again (In the Game menu), or disable custom offsets and use the default english offsets");
+			}
+            gui.Finished();
+        }
+
+        static void resetFoundOffsets() {
+            int menuRegion1Offset = -1;
+            int menuRegion2Offset = -1;
+            int charRegionOffset = -1;
+            int ingameRegionOffset = -1;
         }
     }
     //the extension class must be declared as static
