@@ -926,7 +926,10 @@ namespace F1_2020_Names_Changer {
             return 1;
         }
 
-		public static void findOffsets() {
+		public static void findOffsets(long searchStart = 0, int tryNum=0, long maxI = 0) {
+            if (searchStart == 0) searchStart = (long)Offsets.SEARCH_START; // default starting position as c# won't let you assign long values in a default paramter
+            if (maxI == 0) maxI = (long)2e10;
+
             stopRunning = false;
 			getF1Process();
 			log.Info("Attempting to discover offsets... This might take a minute or so");
@@ -955,9 +958,18 @@ namespace F1_2020_Names_Changer {
             bool foundMenuRegion2 = false;
             // assuming 2GB? of RAM
             long i = 0;
-			while (i < 6e9 && !stopRunning) {
-				ReadProcessMemory((IntPtr)processHandle, (IntPtr)((long)Offsets.SEARCH_START+i), buffer, buffer.Length, out bytesRead);
-                //log.Trace($"Read chunk {i} (0x{(long)Offsets.SEARCH_START+i:x}), read {bytesRead} bytes");
+            bool havePrinted = false;
+			while (i < maxI && !stopRunning) {
+                if ((i * 100 / maxI) % 10 == 0) {
+                    if (!havePrinted) {
+                        havePrinted = true;
+                        log.Info($"{i * 100 / maxI}% ... at address: 0x{searchStart + i:x}");
+                    }
+                } else {
+                    havePrinted = false;
+				}
+				ReadProcessMemory((IntPtr)processHandle, (IntPtr)(searchStart+i), buffer, buffer.Length, out bytesRead);
+                //log.Trace($"Read chunk {i} (0x{searchStart+i:x}), read {bytesRead} bytes");
 
                 if (bytesRead==(IntPtr)0) {
                     i += 50000; // only skip forward a small amount - we can miss sections otherwise
@@ -968,35 +980,35 @@ namespace F1_2020_Names_Changer {
 				// we need to search for 4 important offsets + the teams
 				int foundOffset;
 				if ((foundOffset = Search(buffer, menu_search_bytearr)) >= 0) {
-                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    long fullOffset = (searchStart + i + (long)foundOffset);
                     log.Fatal($"(Not actually fatal) Found menu region 1: 0x{fullOffset:x}");
                     Offsets.MENU_OFFSET_START = (IntPtr)fullOffset - 0xb00;
                     foundMenuRegion1 = true;
 				}
 
                 if ((foundOffset = Search(buffer, menu2_search_bytearr)) >= 0) {
-                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    long fullOffset = (searchStart + i + (long)foundOffset);
                     log.Fatal($"(Not actually fatal) Found menu region 2: 0x{fullOffset:x}");
                     Offsets.MENU2_OFFSET_START = (IntPtr)fullOffset - 0xb00;
                     foundMenuRegion2 = true;
                 }
                 if (!foundCharRegion) { // only find the first instance
                     if ((foundOffset = Search(buffer, char_search_bytearr)) >= 0) {
-                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        long fullOffset = (searchStart + i + (long)foundOffset);
                         log.Fatal($"(Not actually fatal) Found character region: 0x{fullOffset:x}");
                         Offsets.CHARSELECTION_OFFSET_START = (IntPtr)fullOffset - 0xb00;
                         foundCharRegion = true;
                     }
                 }
                 if ((foundOffset = Search(buffer, game_search_bytearr)) >= 0) {
-                    long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                    long fullOffset = (searchStart + i + (long)foundOffset);
                     log.Fatal($"(Not actually fatal) Found in-game region: 0x{fullOffset:x}");
                     Offsets.INGAME_OFFSET_START = (IntPtr)fullOffset - 0xb00;
                     foundGameRegion = true;
                 }
                 if (!foundTeamsRegion) { // skip this slow bit after we've found it
                     if ((foundOffset = Search(buffer, teams_search_bytearr)) >= 0) {
-                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        long fullOffset = (searchStart + i + (long)foundOffset);
                         log.Fatal($"(Not actually fatal) Found the start of the main teams region: 0x{fullOffset:x}");
                         Offsets.TEAMS_OFFSET_START = (IntPtr)fullOffset - 0xb00;
                         foundTeamsRegion = true;
@@ -1004,7 +1016,7 @@ namespace F1_2020_Names_Changer {
                     // the following racing point items are in a different location, before the main section
                     if (!foundRacingPoint) {
                         if ((foundOffset = Search(buffer, teams_search_menu_racingPoint)) >= 0) {
-                            long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                            long fullOffset = (searchStart + i + (long)foundOffset);
                             log.Fatal($"(Not actually fatal) Found the racing point menu item: 0x{fullOffset:x}");
                             Offsets.TEAMS_OFFSET_MENU_RACING_POINT = (IntPtr)fullOffset;
                             foundRacingPoint = true;
@@ -1012,34 +1024,44 @@ namespace F1_2020_Names_Changer {
                     }
                     if (!foundRacingPointGame) {
                         if ((foundOffset = Search(buffer, teams_search_game_racingPoint)) >= 0) {
-                            long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                            long fullOffset = (searchStart + i + (long)foundOffset);
                             log.Fatal($"(Not actually fatal) Found the racing point game item: 0x{fullOffset:x}");
                             Offsets.TEAMS_OFFSET_GAME_RACING_POINT = (IntPtr)fullOffset;
                             foundRacingPointGame = true;
                         }
                     }
                 }
-                 
+
                 //Teams detection, always early on
-                /*if ((long)Offsets.SEARCH_START + i < 0x195000000) {
+                /*if (searchStart + i < 0x195000000) {
                     // convert to a string with special encoding so that weird (128/256) value bytes aren't changed in length, and then search with regex
                     string encodedBuffer = Encoding.GetEncoding(437).GetString(buffer);
                     Match m = mainTeamRegionSearch.Match(encodedBuffer);
                     if (m.Success) {
                         foundOffset = m.Index;
-                        long fullOffset = ((long)Offsets.SEARCH_START + i + (long)foundOffset);
+                        long fullOffset = (searchStart + i + (long)foundOffset);
                         log.Fatal($"Found the start of the main teams region: 0x{fullOffset:x}");
                     }
 				}*/
 
+                if (foundMenuRegion1 && foundMenuRegion2 && foundCharRegion && foundGameRegion && foundTeamsRegion && foundRacingPoint && foundRacingPointGame) {
+                    break;
+                }
+
                 i += buffer.Length;
             }
-            log.Info($"Finished searching for offsets at {(long)Offsets.SEARCH_START + i:x}");
+            log.Info($"Finished searching for offsets at {searchStart + i:x}");
             Offsets.save();
             if (foundMenuRegion1&&foundMenuRegion2&&foundCharRegion&&foundGameRegion&&foundTeamsRegion&&foundRacingPoint&&foundRacingPointGame) {
                 log.Info("SUCCESS: Found all expected offsets (unless there were duplicates)");
 			} else {
-                log.Warn("Failed to find one or more regions, this may cause some names and/or teams to be missed. Either try restarting the game and running \"Find Offsets\" again (In the Game menu), or disable custom offsets and use the default english offsets");
+                if (tryNum > 0) {
+                    log.Warn("Failed to find one or more regions, this may cause some names and/or teams to be missed. Either try restarting the game and running \"Find Offsets\" again (In the Game menu), or disable custom offsets and use the default english offsets");
+                } else {
+                    log.Warn("Didn't find offsets first time, now trying alternative search location. This will take even longer...");
+                    log.Info("It may be quicker to find in Cheat Engine the term {o:mixed}Carlos{/o} and using that as a custom start for Find Offsets");
+                    findOffsets((long)Offsets.SEARCH_START_ALT, 1, (long)1e12);
+				}
 			}
             gui.Finished();
         }

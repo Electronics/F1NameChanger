@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using Microsoft.VisualBasic;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,6 +32,8 @@ namespace F1_2020_Names_Changer {
 			filePath.Text = Directory.GetCurrentDirectory();
 
 			checkForDefaultLookups();
+
+			log.Info("Due to the newest F1 2020 patch, it may be quicker in some cases (or the only way in others!) to use 'Cheat Engine' to find the term {o:mixed}Carlos{/o} as a custom start in Find Offsets rather than letting it search.");
 		}
 
 		private void writeToF1ToolStripMenuItem_Click_1(object sender, EventArgs e) {
@@ -458,6 +461,20 @@ namespace F1_2020_Names_Changer {
 					break;
 			}
 			return bHandled;
+		}
+
+		private void findOffsetsWithCustomStartToolStripMenuItem_Click(object sender, EventArgs e) {
+			String retstr = Interaction.InputBox("Enter the hex offset of the start of the search", "Search Offset");
+			try {
+				long offset = Convert.ToInt64(retstr, 16);
+				offset -= 0x00500000000; // give some search room
+				Task.Run(() => MemoryChanger.findOffsets(offset,99,(long)5e10));
+				useCustomOffset.Checked = true;
+				haveShownCustomOffsetsPopup = true;
+				toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
+			} catch (FormatException) {
+				log.Fatal("Input search offset was not a valid hex string");
+			}
 		}
 	}
 }
