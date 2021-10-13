@@ -12,18 +12,18 @@ Patch 1.18 of the F1 2020 game has proven rather problematic... The memory addre
 
 The fixes (or work-arounds) I have made:
 
-    The default Find Offsets now considers 2, larger, memory ranges. This now actually takes up to minutes to search through sadly.
-    In some cases, this will still not find the correct starting addresses
-    Added a new Find Offsets with Custom Start option in the Game menu. This allows for the search process to start at a specified address given in the popup in hexadecimal.
+- The default Find Offsets now considers 2, larger, memory ranges. This now actually takes up to minutes to search through sadly.
+- In some cases, this will still not find the correct starting addresses
+- Added a new Find Offsets with Custom Start option in the Game menu. This allows for the search process to start at a specified address given in the popup in hexadecimal.
 
-tl;dr or how to make the F1NameChanger work now
+## tl;dr or how to make the F1NameChanger work now
 
 If you want the quickest and most reliable method follow these steps:
 
-    Use Cheat Engine to scan the F1 process for the Value Type: string of {o:mixed}Carlos{/o}.
-    There should only be one result, copy and paste the resulting address (Ctrl+C works) into popup searh offset of the new item Game -> Find Offsets with Custom Start
-    Should work as before!
-    This will likely need to be repeated every time the game starts :(
+1. Use Cheat Engine to scan the F1 process for the Value Type: string of {o:mixed}Carlos{/o}.
+2. There should only be one result, copy and paste the resulting address (Ctrl+C works) into popup searh offset of the new item Game -> Find Offsets with Custom Start
+3. Should work as before!
+4. This will likely need to be repeated every time the game starts :(
 
 
 # Running
