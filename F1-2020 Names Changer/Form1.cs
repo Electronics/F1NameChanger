@@ -474,6 +474,8 @@ namespace F1_2020_Names_Changer {
 				toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
 			} catch (FormatException) {
 				log.Fatal("Input search offset was not a valid hex string");
+			} catch (System.ArgumentOutOfRangeException) {
+				// nothing - cancel was pressed / closed
 			}
 		}
 	}
