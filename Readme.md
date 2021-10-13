@@ -4,7 +4,27 @@ I wrote this rather than using cheat engine, as I felt the scripting tools avail
 
 Current stable version: https://github.com/Electronics/F1NameChanger/releases/tag/latest
 
-See [Issue #15](https://github.com/Electronics/F1NameChanger/issues/15) for latest on 1.18 game patch
+# 1.18 Patch Woes
+
+(copied from https://github.com/Electronics/F1NameChanger/pull/20)
+
+Patch 1.18 of the F1 2020 game has proven rather problematic... The memory address space used has apparently increased by 256x meaning my magic fix of Find Offsets a bit more non-solutioney. To trawl through all memory space used would take hours with the way I search for the various bits and bobs.
+
+The fixes (or work-arounds) I have made:
+
+    The default Find Offsets now considers 2, larger, memory ranges. This now actually takes up to minutes to search through sadly.
+    In some cases, this will still not find the correct starting addresses
+    Added a new Find Offsets with Custom Start option in the Game menu. This allows for the search process to start at a specified address given in the popup in hexadecimal.
+
+tl;dr or how to make the F1NameChanger work now
+
+If you want the quickest and most reliable method follow these steps:
+
+    Use Cheat Engine to scan the F1 process for the Value Type: string of {o:mixed}Carlos{/o}.
+    There should only be one result, copy and paste the resulting address (Ctrl+C works) into popup searh offset of the new item Game -> Find Offsets with Custom Start
+    Should work as before!
+    This will likely need to be repeated every time the game starts :(
+
 
 # Running
 
