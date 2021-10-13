@@ -20,7 +20,7 @@ The fixes (or work-arounds) I have made:
 
 If you want the quickest and most reliable method follow these steps:
 
-1. Use Cheat Engine to scan the F1 process for the Value Type: string of {o:mixed}Carlos{/o}.
+1. Use [Cheat Engine](https://www.cheatengine.org/) to scan the F1 process for the Value Type: string of {o:mixed}Carlos{/o}.
 2. There should only be one result, copy and paste the resulting address (Ctrl+C works) into popup searh offset of the new item Game -> Find Offsets with Custom Start
 3. Should work as before!
 4. This will likely need to be repeated every time the game starts :(
