@@ -5,6 +5,10 @@ using System.Text;
 
 namespace F1_2020_Names_Changer {
 	class Lookups {
+		public Lookups() {
+			generateReverseDicts();
+		}
+
 		public static Dictionary<string, string> firstNames = new Dictionary<string, string>(){ // from single 'unique' firstname to full Mixed/Upper standard name
 			{"Carlos", "Carlos SAINZ"},
 			{"Daniil", "Daniil KVYAT"},
@@ -74,7 +78,7 @@ namespace F1_2020_Names_Changer {
 			{"VET", "Sebastian VETTEL"}
 		};
 
-		public static Dictionary<string, string> shortNames_rev = shortNames.ToDictionary(x => x.Value, x => x.Key);
+		public static Dictionary<string, string> shortNames_rev;
 
 		public static Dictionary<string, string> teams = new Dictionary<string, string>() { // used for looking up found team names in memory to our lookup names
 			{"Alfa Romeo Racing Orlen", "Alfa Romeo"},
@@ -89,9 +93,15 @@ namespace F1_2020_Names_Changer {
 			{"Williams Racing", "Williams"}
 		};
 
+		public static Dictionary<string, string> teams_2021Patch = new Dictionary<string, string>() { // patches onto the main teams dict if we're on the 2021 version (as we can't have duplicate entries if team names have changed)
+			{"Red Bull Racing Honda", "Red Bull"},
+			{"Alpine F1 Team", "Alpine"}
+		};
+
 		public static Dictionary<string, string> teams_short = new Dictionary<string, string>() { // same as above, but for the short-team names used in-game leaderboard
 			{"Alfa Romeo", "Alfa Romeo"},
 			{"AlphaTauri", "AlphaTauri"},
+			{"Alpine", "Alpine"},
 			{"Ferrari", "Ferrari" },
 			{"Haas", "Haas"},
 			{"{o:upper}M{/o}{o:lower}c{/o}{o:upper}L{/o}aren", "McLaren"},
@@ -102,7 +112,13 @@ namespace F1_2020_Names_Changer {
 			{"Williams", "Williams"}
 		};
 
-		public static Dictionary<string, string> teams_rev = teams.ToDictionary(x => x.Value, x => x.Key);
-		public static Dictionary<string, string> teams_short_rev = teams_short.ToDictionary(x => x.Value, x => x.Key);
+		public static Dictionary<string, string> teams_rev;
+		public static Dictionary<string, string> teams_short_rev;
+
+		public static void generateReverseDicts() {
+			teams_rev = teams.ToDictionary(x => x.Value, x => x.Key);
+			teams_short_rev = teams_short.ToDictionary(x => x.Value, x => x.Key);
+			shortNames.ToDictionary(x => x.Value, x => x.Key);
+		}
 	}
 }

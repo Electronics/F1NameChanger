@@ -10,9 +10,10 @@ namespace F1_2020_Names_Changer {
 
 		public static IntPtr SEARCH_START = (IntPtr)0x1b000000000; // used for searching for below offsets if they don't work
         public static IntPtr SEARCH_START_ALT = (IntPtr)0x21000000000;
+        public static IntPtr SEARCH_START_F12021 = (IntPtr)0x120000000;
 
-		// these are addresses at which this program will start to search for the below search strings to identify the where the actual start of the region is
-		public static IntPtr MENU_OFFSET_START;
+        // these are addresses at which this program will start to search for the below search strings to identify the where the actual start of the region is
+        public static IntPtr MENU_OFFSET_START;
         public static IntPtr MENU2_OFFSET_START;
         public static IntPtr CHARSELECTION_OFFSET_START;
         public static IntPtr INGAME_OFFSET_START;

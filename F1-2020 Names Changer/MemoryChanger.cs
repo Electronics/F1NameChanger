@@ -105,9 +105,9 @@ namespace F1_2020_Names_Changer {
 
         public static void getF1Process(bool skipOffsetLoading=false) {
             stopRunning = false;
-            if (Process.GetProcesses().Where(x=> x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
+            if (Process.GetProcesses().Where(x=> x.ProcessName.StartsWith("F1_20", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
                 log.Info("F1 Process not detected, waiting for game to be started");
-                while (Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
+                while (Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_20", StringComparison.OrdinalIgnoreCase)).Count() < 1) {
                     System.Threading.Thread.Sleep(1000);
                     log.Trace("Waiting for F1 Thread");
                     if (stopRunning) return;
@@ -115,7 +115,7 @@ namespace F1_2020_Names_Changer {
                 log.Info("F1 Process detected, waiting 20 seconds or so for game to get ready");
                 System.Threading.Thread.Sleep(20000);
             }
-            process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_2020", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
+            process = Process.GetProcesses().Where(x => x.ProcessName.StartsWith("F1_20", StringComparison.OrdinalIgnoreCase)).First(); // Get the F1 process
             if (process.ProcessName=="F1_2020_dx12" && !skipOffsetLoading) {
                 log.Info("Detected as DX12 version, loading offsets");
                 Offsets.loadDX12();
@@ -124,8 +124,31 @@ namespace F1_2020_Names_Changer {
                 log.Info("Detected as DX11 version, loading offsets");
                 Offsets.loadDX11();
 			}
+            if (isF12021()) {
+                F12021Patch();
+			}
             processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, process.Id);
             log.Info("F1 Process detected");
+        }
+
+        public static bool isF12021() {
+            if (process.ProcessName.StartsWith("F1_2021")) {
+                return true;
+			}
+            return false;
+		}
+
+        public static void F12021Patch() {
+            // remove and replace conflicting teams
+            log.Info("Loading F12021 specific teams");
+            foreach (KeyValuePair<string, string> team in Lookups.teams_2021Patch) {
+                var old = Lookups.teams.FirstOrDefault(x => x.Value == team.Value);
+                if (!String.IsNullOrEmpty(old.Key)) {
+                    Lookups.teams.Remove(old.Key);
+				}
+                Lookups.teams[team.Key] = team.Value;
+			}
+            Lookups.generateReverseDicts();
         }
 
         public static void run(string nameLookupFile, string teamLookupFile, bool reversed=false, bool useCustomOffsets=false) {
@@ -282,6 +305,11 @@ namespace F1_2020_Names_Changer {
 
             //temppppp
             //byte[] buffer = File.ReadAllBytes(@"C:\Users\Laurie\Desktop\F1RevEng\menuMemoryRegion.hex");
+
+            if (isF12021()) {
+                log.Info("Pre-fetching game offset");
+                ingameRegionOffset = Search(buffer, INGAME_SEARCH_STR); // search because Array.indexOf sucks
+            }
 
             if (charRegionOffset < 0) {
                 charRegionOffset = Search(buffer, CHARSELECTION_SEARCH_STR); // search because Array.indexOf sucks
@@ -673,8 +701,12 @@ namespace F1_2020_Names_Changer {
                     }
                 }
                 // finally write the racing point bits as they're in a different memory region
-                tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_MENU_RACING_POINT, Lookups.teams_rev);
-                tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_GAME_RACING_POINT, Lookups.teams_short_rev);
+                if (Offsets.TEAMS_OFFSET_MENU_RACING_POINT != IntPtr.Zero) {
+                    tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_MENU_RACING_POINT, Lookups.teams_rev);
+                }
+                if (Offsets.TEAMS_OFFSET_GAME_RACING_POINT != IntPtr.Zero) {
+                    tryCopyName("Racing Point", (long)Offsets.TEAMS_OFFSET_GAME_RACING_POINT, Lookups.teams_short_rev);
+                }
             } else {
                 // start in the main menu 
                 foreach (var team in Lookups.teams) {
@@ -927,26 +959,23 @@ namespace F1_2020_Names_Changer {
         }
 
 		public static void findOffsets(long searchStart = 0, int tryNum=0, long maxI = 0) {
-            if (searchStart == 0) searchStart = (long)Offsets.SEARCH_START; // default starting position as c# won't let you assign long values in a default paramter
+            // tryNum is to allow for recursive finding with greater search areas
+            // maxI is memory max (from searchStart)
             if (maxI == 0) maxI = (long)2e10;
 
             stopRunning = false;
 			getF1Process();
-			log.Info("Attempting to discover offsets... This might take a minute or so");
+            if (searchStart == 0) {
+                if (isF12021()) {
+                    searchStart = (long)Offsets.SEARCH_START_F12021;
+                } else {
+                    searchStart = (long)Offsets.SEARCH_START; // default starting position as c# won't let you assign long values in a default paramter
+                }
+            }
+            log.Info("Attempting to discover offsets... This might take a minute or so");
 			// read 5MB chunks at a time
 			byte[] buffer = new byte[5000000];
 			IntPtr bytesRead;
-
-            // byte arrays constructed before loop for speed
-            byte[] menu_search_bytearr = new byte[] { 123, 111, 58, 109, 105, 120, 101, 100, 125, 67, 97, 114, 108, 111, 115, 123, 47, 111, 125, 32, 123, 111, 58, 117, 112, 112, 101, 114, 125, 83, 65, 73, 78, 90, 123, 47, 111, 125, 00, 00, 00, 00 }; // {o:mixed}Carlos{/o} {o:upper}SAINZ{/o}\0\0\0\0
-			byte[] menu2_search_bytearr = new byte[] { 0x7B, 0x6F, 0x3A, 0x6D, 0x69, 0x78, 0x65, 0x64, 0x7D, 0x44, 0x61, 0x6E, 0x69, 0x65, 0x6C, 0x7B, 0x2F, 0x6F, 0x7D, 0x20, 0x7B, 0x6F, 0x3A, 0x75, 0x70, 0x70, 0x65, 0x72, 0x7D, 0x52, 0x49, 0x43, 0x43, 0x49, 0x41, 0x52, 0x44, 0x4F, 0x7B, 0x2F, 0x6F, 0x7D, 0x00, 0x5D, 0x00 }; // {o:mixed}Daniel{/o} {o:upper}RICIARDO{/o}\0]\0
-            byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
-            byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x08, 0x00, 0x00, 0x00}; // Carlos...... , used to be SAINZ....SAI as well, but needs regex
-            byte[] teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32}; // now: Red Bull Racing\03052 due to language differences using different special characters?
-            // used to be: translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
-            byte[] teams_search_menu_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D, 0x00, 0x43, 0x68, 0x61, 0x72, 0x6F, 0x75, 0x7A, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D };
-            byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00 };
-
 
             bool foundCharRegion = false; // our search string finds a lot of matches on this bit, we just want the first
             bool foundTeamsRegion = false;
@@ -956,6 +985,26 @@ namespace F1_2020_Names_Changer {
             bool foundGameRegion = false;
             bool foundMenuRegion1 = false;
             bool foundMenuRegion2 = false;
+
+            // byte arrays constructed before loop for speed
+            byte[] menu_search_bytearr = new byte[] { 123, 111, 58, 109, 105, 120, 101, 100, 125, 67, 97, 114, 108, 111, 115, 123, 47, 111, 125, 32, 123, 111, 58, 117, 112, 112, 101, 114, 125, 83, 65, 73, 78, 90, 123, 47, 111, 125, 00}; // {o:mixed}Carlos{/o} {o:upper}SAINZ{/o}\0
+			byte[] menu2_search_bytearr = new byte[] { 0x7B, 0x6F, 0x3A, 0x6D, 0x69, 0x78, 0x65, 0x64, 0x7D, 0x44, 0x61, 0x6E, 0x69, 0x65, 0x6C, 0x7B, 0x2F, 0x6F, 0x7D, 0x20, 0x7B, 0x6F, 0x3A, 0x75, 0x70, 0x70, 0x65, 0x72, 0x7D, 0x52, 0x49, 0x43, 0x43, 0x49, 0x41, 0x52, 0x44, 0x4F, 0x7B, 0x2F, 0x6F, 0x7D, 0x00 }; // {o:mixed}Daniel{/o} {o:upper}RICIARDO{/o}\0
+            byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
+            byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Carlos...... , used to be SAINZ....SAI as well, but needs regex
+            byte[] teams_search_bytearr;
+            if (isF12021()) {
+                teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x48, 0x6F, 0x6E, 0x64, 0x61, 0x00 }; // Red Bull Racing Honda
+                foundRacingPoint = true; // racing point is no longer in this game!
+                foundRacingPointGame = true;
+                char_search_bytearr = game_search_bytearr; // it's merged?
+            } else {
+                teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32 }; // now: Red Bull Racing\03052 due to language differences using different special characters?
+                 // used to be: translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
+            }
+            byte[] teams_search_menu_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D, 0x00, 0x43, 0x68, 0x61, 0x72, 0x6F, 0x75, 0x7A, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D };
+            byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00 };
+
+
             // assuming 2GB? of RAM
             long i = 0;
             bool havePrinted = false;

@@ -467,8 +467,11 @@ namespace F1_2020_Names_Changer {
 			String retstr = Interaction.InputBox("Enter the hex offset of the start of the search", "Search Offset");
 			try {
 				long offset = Convert.ToInt64(retstr, 16);
-				offset -= 0x00500000000; // give some search room
-				Task.Run(() => MemoryChanger.findOffsets(offset,99,(long)5e10));
+				offset -= 0x00180000000; // give some search room
+				offset = Math.Max(offset, 0x060000000);
+				Random rnd = new Random(); // add a slight random offset in case when we search we miss an item by slipping across a chunk
+				offset += rnd.Next(100, 5000);
+				Task.Run(() => MemoryChanger.findOffsets(offset,99,(long)2e10));
 				useCustomOffset.Checked = true;
 				haveShownCustomOffsetsPopup = true;
 				toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
