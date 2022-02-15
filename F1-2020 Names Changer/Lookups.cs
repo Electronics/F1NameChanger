@@ -43,8 +43,8 @@ namespace F1_2020_Names_Changer {
 			// insert more here I'm bored of typing them all out
 			{"Jack", "Jack AITKEN" },
 			{"George", "George RUSSELL" },
-			{"Lando", "Lando NORRIS"}
-
+			{"Lando", "Lando NORRIS"},
+			{"Robert", "Robert KUBICA" }
 		};
 
 		public static Dictionary<string, string> shortNames = new Dictionary<string, string>() {
@@ -84,13 +84,17 @@ namespace F1_2020_Names_Changer {
 			{"Alfa Romeo Racing Orlen", "Alfa Romeo"},
 			{"Scuderia AlphaTauri Honda", "AlphaTauri"},
 			{"Scuderia Ferrari", "Ferrari"},
+			{"Rich Energy Haas F1 Team", "Haas"},
+			{"SpScore Racing Point F1 Team", "Racing Point"},
+			{"Red Bull Toro Rosso Honda", "Toro Rosso"},
 			{"Haas F1 Team", "Haas"},
 			{"{o:upper}M{/o}{o:lower}c{/o}{o:upper}L{/o}aren F1 Team", "McLaren"},
 			{"Mercedes-AMG Petronas F1 Team", "Mercedes"},
 			{"BWT Racing Point F1 Team" , "Racing Point"},
 			{"Aston Martin Red Bull Racing", "Red Bull"},
 			{"Renault DP World F1 Team", "Renault"},
-			{"Williams Racing", "Williams"}
+			{"ROKiT Williams Racing", "Williams"},
+			{"Williams Racing", "Williams"},
 		};
 
 		public static Dictionary<string, string> teams_2021Patch = new Dictionary<string, string>() { // patches onto the main teams dict if we're on the 2021 version (as we can't have duplicate entries if team names have changed)
@@ -108,6 +112,7 @@ namespace F1_2020_Names_Changer {
 			{"Mercedes-AMG Petronas", "Mercedes"},
 			{"Racing Point", "Racing Point"},
 			{"Red Bull Racing", "Red Bull" },
+			{"Toro Rosso", "Toro Rosso"},
 			{"Renault", "Renault"},
 			{"Williams", "Williams"}
 		};

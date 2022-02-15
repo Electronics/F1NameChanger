@@ -137,6 +137,12 @@ namespace F1_2020_Names_Changer {
 			}
             return false;
 		}
+        public static bool isF12019() {
+            if (process.ProcessName.StartsWith("F1_2019")) {
+                return true;
+            }
+            return false;
+        }
 
         public static void F12021Patch() {
             // remove and replace conflicting teams
@@ -969,7 +975,11 @@ namespace F1_2020_Names_Changer {
                 if (isF12021()) {
                     searchStart = (long)Offsets.SEARCH_START_F12021;
                 } else {
-                    searchStart = (long)Offsets.SEARCH_START; // default starting position as c# won't let you assign long values in a default paramter
+                    if (isF12019()) {
+                        searchStart = (long)Offsets.SEARCH_START_F12019;
+                    } else {
+                        searchStart = (long)Offsets.SEARCH_START; // default starting position as c# won't let you assign long values in a default paramter
+                    }
                 }
             }
             log.Info("Attempting to discover offsets... This might take a minute or so");
@@ -990,7 +1000,7 @@ namespace F1_2020_Names_Changer {
             byte[] menu_search_bytearr = new byte[] { 123, 111, 58, 109, 105, 120, 101, 100, 125, 67, 97, 114, 108, 111, 115, 123, 47, 111, 125, 32, 123, 111, 58, 117, 112, 112, 101, 114, 125, 83, 65, 73, 78, 90, 123, 47, 111, 125, 00}; // {o:mixed}Carlos{/o} {o:upper}SAINZ{/o}\0
 			byte[] menu2_search_bytearr = new byte[] { 0x7B, 0x6F, 0x3A, 0x6D, 0x69, 0x78, 0x65, 0x64, 0x7D, 0x44, 0x61, 0x6E, 0x69, 0x65, 0x6C, 0x7B, 0x2F, 0x6F, 0x7D, 0x20, 0x7B, 0x6F, 0x3A, 0x75, 0x70, 0x70, 0x65, 0x72, 0x7D, 0x52, 0x49, 0x43, 0x43, 0x49, 0x41, 0x52, 0x44, 0x4F, 0x7B, 0x2F, 0x6F, 0x7D, 0x00 }; // {o:mixed}Daniel{/o} {o:upper}RICIARDO{/o}\0
             byte[] char_search_bytearr = Encoding.UTF8.GetBytes("RIVER].bk2");
-            byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Carlos...... , used to be SAINZ....SAI as well, but needs regex
+            byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00}; // Carlos...... , used to be SAINZ....SAI as well, but needs regex
             byte[] teams_search_bytearr;
             if (isF12021()) {
                 teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x48, 0x6F, 0x6E, 0x64, 0x61, 0x00 }; // Red Bull Racing Honda
@@ -1000,6 +1010,10 @@ namespace F1_2020_Names_Changer {
             } else {
                 teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x00, 0x33, 0x30, 0x35, 0x32 }; // now: Red Bull Racing\03052 due to language differences using different special characters?
                  // used to be: translates to Red Bull Racing\03052\05\0Guenther Steiner\027\0James Key\0Williams\08\0
+            }
+            if (isF12019()) {
+                foundRacingPoint = true; // racing point weird menu item is only in 2020!
+                foundRacingPointGame = true;
             }
             byte[] teams_search_menu_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x20, 0x46, 0x31, 0x20, 0x54, 0x65, 0x61, 0x6D, 0x00, 0x43, 0x68, 0x61, 0x72, 0x6F, 0x75, 0x7A, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D };
             byte[] teams_search_game_racingPoint = new byte[] { 0x42, 0x57, 0x54, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x50, 0x6F, 0x69, 0x6E, 0x74, 0x00, 0x5A, 0x48, 0x4F, 0x55, 0x00, 0x4D, 0x61, 0x78, 0x69, 0x6D, 0x69, 0x6C, 0x69, 0x61, 0x6E, 0x00, 0x4A, 0x6F, 0x72, 0x64, 0x61, 0x6E, 0x00 };
@@ -1021,7 +1035,7 @@ namespace F1_2020_Names_Changer {
                 //log.Trace($"Read chunk {i} (0x{searchStart+i:x}), read {bytesRead} bytes");
 
                 if (bytesRead==(IntPtr)0) {
-                    i += 50000; // only skip forward a small amount - we can miss sections otherwise
+                    i += 20000; // only skip forward a small amount - we can miss sections otherwise
                     //TODO: possibly change this for a search backwards if we've just skipped past a section we can't read?
                     continue;
 				}
@@ -1097,7 +1111,11 @@ namespace F1_2020_Names_Changer {
                     break;
                 }
 
-                i += buffer.Length;
+                if ((long)bytesRead==buffer.Length) {
+                    i += buffer.Length;
+                } else {
+                    i += (long)bytesRead; // if we've hit some unaccessable memory, tread carefully until we get to the next section
+				}
             }
             log.Info($"Finished searching for offsets at {searchStart + i:x}");
             Offsets.save();
