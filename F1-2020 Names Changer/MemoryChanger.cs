@@ -125,8 +125,15 @@ namespace F1_2020_Names_Changer {
                 Offsets.loadDX11();
 			}
             if (isF12021()) {
-                F12021Patch();
-			}
+                // remove and replace conflicting teams
+                log.Info("Loading F12021 specific teams");
+                PatchTeams(Lookups.teams_2021Patch);
+            }
+            if (isF12019()) {
+                // remove and replace conflicting teams
+                log.Info("Loading F12019 specific teams");
+                PatchTeams(Lookups.teams_2019Patch);
+            }
             processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, process.Id);
             log.Info("F1 Process detected");
         }
@@ -144,16 +151,14 @@ namespace F1_2020_Names_Changer {
             return false;
         }
 
-        public static void F12021Patch() {
-            // remove and replace conflicting teams
-            log.Info("Loading F12021 specific teams");
-            foreach (KeyValuePair<string, string> team in Lookups.teams_2021Patch) {
+        public static void PatchTeams(Dictionary<string,string> patchDict) {
+            foreach (KeyValuePair<string, string> team in patchDict) {
                 var old = Lookups.teams.FirstOrDefault(x => x.Value == team.Value);
                 if (!String.IsNullOrEmpty(old.Key)) {
                     Lookups.teams.Remove(old.Key);
-				}
+                }
                 Lookups.teams[team.Key] = team.Value;
-			}
+            }
             Lookups.generateReverseDicts();
         }
 
@@ -380,6 +385,11 @@ namespace F1_2020_Names_Changer {
             // --------------------- Now finally teams ----------------------------------------
             if (teamLookup.Count > 0) {
 				log.Info("Editing Teams...");
+
+                if (isF12021()
+                    ) {
+                    buffer = new byte[1000000]; // we have to change stuff spread across a larger amount of RAM
+                }
 
 
 				ReadProcessMemory((IntPtr)processHandle, Offsets.TEAMS_OFFSET_START, buffer, buffer.Length, out bytesRead);
@@ -1003,7 +1013,7 @@ namespace F1_2020_Names_Changer {
             byte[] game_search_bytearr = new byte[] { 0x43, 0x61, 0x72, 0x6C, 0x6F, 0x73, 0x00, 0x00, 0x00, 0x00}; // Carlos...... , used to be SAINZ....SAI as well, but needs regex
             byte[] teams_search_bytearr;
             if (isF12021()) {
-                teams_search_bytearr = new byte[] { 0x52, 0x65, 0x64, 0x20, 0x42, 0x75, 0x6C, 0x6C, 0x20, 0x52, 0x61, 0x63, 0x69, 0x6E, 0x67, 0x20, 0x48, 0x6F, 0x6E, 0x64, 0x61, 0x00 }; // Red Bull Racing Honda
+                teams_search_bytearr = Encoding.UTF8.GetBytes("Aston Martin Cognizant Formula One Team");
                 foundRacingPoint = true; // racing point is no longer in this game!
                 foundRacingPointGame = true;
                 char_search_bytearr = game_search_bytearr; // it's merged?

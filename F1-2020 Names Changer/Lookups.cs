@@ -84,8 +84,6 @@ namespace F1_2020_Names_Changer {
 			{"Alfa Romeo Racing Orlen", "Alfa Romeo"},
 			{"Scuderia AlphaTauri Honda", "AlphaTauri"},
 			{"Scuderia Ferrari", "Ferrari"},
-			{"Rich Energy Haas F1 Team", "Haas"},
-			{"SpScore Racing Point F1 Team", "Racing Point"},
 			{"Red Bull Toro Rosso Honda", "Toro Rosso"},
 			{"Haas F1 Team", "Haas"},
 			{"{o:upper}M{/o}{o:lower}c{/o}{o:upper}L{/o}aren F1 Team", "McLaren"},
@@ -93,13 +91,20 @@ namespace F1_2020_Names_Changer {
 			{"BWT Racing Point F1 Team" , "Racing Point"},
 			{"Aston Martin Red Bull Racing", "Red Bull"},
 			{"Renault DP World F1 Team", "Renault"},
-			{"ROKiT Williams Racing", "Williams"},
 			{"Williams Racing", "Williams"},
 		};
 
 		public static Dictionary<string, string> teams_2021Patch = new Dictionary<string, string>() { // patches onto the main teams dict if we're on the 2021 version (as we can't have duplicate entries if team names have changed)
 			{"Red Bull Racing Honda", "Red Bull"},
-			{"Alpine F1 Team", "Alpine"}
+			{"Alpine F1 Team", "Alpine"},
+			{"Aston Martin Cognizant Formula One Team", "Aston Martin"},
+			{"Uralkali Haas F1 Team", "Haas"},
+		};
+
+		public static Dictionary<string, string> teams_2019Patch = new Dictionary<string, string>() {
+			{"ROKiT Williams Racing", "Williams"},
+			{"SpScore Racing Point F1 Team", "Racing Point"},
+			{"Rich Energy Haas F1 Team", "Haas"},
 		};
 
 		public static Dictionary<string, string> teams_short = new Dictionary<string, string>() { // same as above, but for the short-team names used in-game leaderboard
