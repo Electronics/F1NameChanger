@@ -8,3 +8,5 @@ Alfa Romeo,
 Williams,
 Haas,
 McLaren,
+Alpine,
+Aston Martin
